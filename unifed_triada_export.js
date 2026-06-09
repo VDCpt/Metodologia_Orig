@@ -1269,6 +1269,11 @@
     // FUNÇÃO DE EXPORTAÇÃO DA PETIÇÃO INICIAL (PDF VIA pdfMake) - CONSOLIDADA
     // =========================================================================
     async function _gerarPeticaoBlob() {
+        // [FIX-ISPTERROR-02] lang e isPT declarados no escopo de topo da função.
+        // Medida preventiva: evita ReferenceError em eventuais utilizações de isPT
+        // fora dos callbacks internos (footer, fallback HTML).
+        const lang = window.currentLang || 'pt';
+        const isPT = lang === 'pt';
         triadaLog('info', '⚖️ Iniciando geração da Minuta de Petição Inicial (Blob) via pdfMake');
 
         const _activePayload = window.UNIFED_ACTIVE_EXPORT_PAYLOAD || null;
@@ -1490,6 +1495,12 @@
             ? parseFloat(window.UNIFEDSystem.auxiliaryData.totalNaoSujeitos)
             : 451.15;
         // ─────────────────────────────────────────────────────────────────────
+        // [FIX-ISPTERROR-01] lang e isPT declarados no escopo de topo da função.
+        // Corrige ReferenceError nas linhas da secção "PROVA RAINHA" (content[])
+        // onde isPT era usado sem estar no escopo — a declaração anterior existia
+        // apenas dentro do footer callback (closure distinta).
+        const lang = window.currentLang || 'pt';
+        const isPT = lang === 'pt';
         const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
         const sys = window.UNIFEDSystem || {};
 
