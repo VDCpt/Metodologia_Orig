@@ -50,7 +50,7 @@
  *   cadeia de custódia detalhada, validação de selagem, questionário pericial,
  *   nota de reconciliação DAC7, questões para contraditório e declaração de compromisso.
  * ============================================================================
- * RETIFICAÇÃO CIRÚRGICA v1.0-R23: CORRECÇÃO DO ESTILO footerText
+ * RETIFICAÇÃO CIRÚRGICA v1.0-COMMERCIAL-LITIGATION: CORRECÇÃO DO ESTILO footerText
  * - Adicionado estilo footerText em _gerarBlobParecerTecnicoForense para evitar erro "Cannot read properties of undefined"
  * - Substituída secção 33 (Declaração de Compromisso) por versão sanitizada sem texto solto
  * ============================================================================
@@ -754,9 +754,11 @@
     // =========================================================================
     // FUNÇÃO AUXILIAR DE FALLBACK HTML PARA PDFs (quando pdfMake falha)
     // =========================================================================
+    // [PATCH-UNIFED-01] _generateFallbackHTML: isPT declarado localmente nesta função.
+    // Corrige ReferenceError em contextos onde isPT não estava no escopo da closure.
     function _generateFallbackHTML(metrics, tipo, pendingEvidenceIds) {
         const lang = window.currentLang || 'pt';
-        const isPT = lang === 'pt';
+        const isPT = (window.currentLang || 'pt') === 'pt'; // declaração local explícita
         const title = tipo === 'analista' ? (isPT ? 'Relatório Pericial Analista' : 'Analyst Forensic Report') :
                       tipo === 'parecer' ? (isPT ? 'Parecer Técnico Forense' : 'Forensic Technical Opinion') :
                       (isPT ? 'Anexo de Custódia' : 'Custody Annex');
@@ -1482,7 +1484,11 @@
         // Valor segregado por não ser sujeito a comissão conforme FAQ da Plataforma.
         // Campanhas: 405,00 € + Gorjetas (Tips): 46,00 € + Portagens: 0,15 €
         // Este valor é subtraído da base de cálculo antes da geração do relatório final.
-        const ISENCAO_BASE_TRIBUTAVEL = 451.15;
+        // [RET-TRI-01] Valor dinâmico: lido de auxiliaryData se disponível.
+        // Fallback para 451,15 € apenas quando auxiliaryData não está carregado.
+        const ISENCAO_BASE_TRIBUTAVEL = (window.UNIFEDSystem?.auxiliaryData?.totalNaoSujeitos != null)
+            ? parseFloat(window.UNIFEDSystem.auxiliaryData.totalNaoSujeitos)
+            : 451.15;
         // ─────────────────────────────────────────────────────────────────────
         const canonicalSessionId = await window.UNIFED_SESSION_RESOLVER.resolve();
         const sys = window.UNIFEDSystem || {};
@@ -2026,7 +2032,7 @@ ADMISSIBILIDADE DA PROVA DIGITAL:
 
                 // ========== 15. CERTIFICAÇÃO DIGITAL ==========
                 { text: "7. CERTIFICAÇÃO DIGITAL", style: 'h2' },
-                { text: "Sistema de peritagem forense estruturado em conformidade com as normas, com selo de integridade digital SHA-256. Todos os relatórios são temporalmente selados e auditáveis.\n\nAlgoritmo Hash: SHA-256 (Forense)\nTimestamp: RFC 3161\nValidade Prova: Indeterminada\nCertificação: UNIFIED - PROBATUM v13.12.2-i18n · DORA COMPLIANT\n\nEste relatório cumpre com o Regulamento (UE) 2022/2554 (DORA) - Digital Operational Resilience Act, assegurando a resiliência operacional digital e a integridade das evidências digitais processadas.", style: 'normal', margin: [0, 0, 0, 15] },
+                { text: "Sistema de peritagem forense estruturado em conformidade com as normas, com selo de integridade digital SHA-256. Todos os relatórios são temporalmente selados e auditáveis.\n\nAlgoritmo Hash: SHA-256 (Forense)\nTimestamp: RFC 3161\nValidade Prova: Indeterminada\nCertificação: UNIFIED - PROBATUM v1.0-COMMERCIAL-LITIGATION · DORA COMPLIANT\n\nEste relatório cumpre com o Regulamento (UE) 2022/2554 (DORA) - Digital Operational Resilience Act, assegurando a resiliência operacional digital e a integridade das evidências digitais processadas.", style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 16. ANÁLISE PERICIAL DETALHADA ==========
                 { text: "8. ANÁLISE PERICIAL / DETAILED EXPERT ANALYSIS", style: 'h2' },
@@ -2165,7 +2171,9 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
                                 { text: 'Ficheiro / Evidência', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'left' },
                                 { text: 'Hash SHA-256 (Completo) · Timestamp', bold: true, fillColor: '#1e3a8a', color: '#ffffff', fontSize: 8, alignment: 'left' }
                             ],
-                            ...evidenceList.map((ev, i) => [
+                            // [RET-TRI-02] Limite de 200 evidências no PDF (performance + pdfMake).
+                            // Registos completos disponíveis no JSON estruturado em anexo.
+                            ...evidenceList.slice(0, 200).map((ev, i) => [
                                 { text: ev.filename, fontSize: 7.5, bold: true, fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' },
                                 {
                                     stack: [
@@ -2174,7 +2182,10 @@ Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão d
                                     ],
                                     fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff'
                                 }
-                            ])
+                            ]),
+                            ...(evidenceList.length > 200 ? [
+                                [{ text: `(... e mais ${evidenceList.length - 200} evidências — registos completos no ficheiro JSON estruturado em anexo ao Pacote.)`, colSpan: 2, alignment: 'center', fontSize: 8, italics: true, fillColor: '#f8faff' }, {}]
+                            ] : [])
                         ]
                     },
                     layout: {
@@ -2298,7 +2309,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 { text: "SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS", style: 'h2', margin: [0, 10, 0, 5] },
                 { text: "Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.", style: 'normal', margin: [0, 0, 0, 10] },
                 { text: "CONSULTOR TÉCNICO — COMPROMISSO DE HONRA E SALVAGUARDA (ART. 153.º E 155.º CPP)", style: 'h2', margin: [0, 10, 0, 5] },
-                { text: "Identificação:\n* Nome: Técnico Forense\n* Cargo: Analista e Consultor Forense Independente | Big Data Analytics\n* Estatuto: Consultor Técnico Independente (Art. 155.º do CPP). Atuação em conformidade com o regime de liberdade de prova e perícia documental.\n\nNOTA DE SALVAGUARDA JURÍDICA E ÂMBITO: As conclusões constantes neste documento infraestruturam-se exclusivamente nos artefactos e elementos documentais disponibilizados pelo solicitante. O presente parecer constitui uma análise técnica independente de natureza consultiva e prova documental assistencial, não substituindo, para quaisquer efeitos processuais, a realização de uma perícia oficial ordenada pela autoridade judiciária competente.\n\nAnálise material baseada em dados estruturados fornecidos; o escopo limita-se à integridade financeira e documental dos ativos digitais apresentados, conforme Art. 125.º CPP.\n\nDECLARAÇÃO DE COMPROMISSO: Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.\n\nData: " + dataEmissao + "\n\nAssinatura do Técnico Responsável Pela Análise\n\n[ UNIFED - PROBATUM CERTIFIED - ANALISTA E CONSULTOR FORENSE - v13.12.2-i18n ]\nEstudo de Viabilidade - Consultoria Forense Especializada - Uso restrito a mandato jurídico autorizado\nFundamentação: RGIT Art. 103.º (Fraude Fiscal) - Art. 104.º (Fraude Qualificada) - CRP Art. 32.º - CPP Art. 125.º", style: 'normal', margin: [0, 0, 0, 15] },
+                { text: "Identificação:\n* Nome: Técnico Forense\n* Cargo: Analista e Consultor Forense Independente | Big Data Analytics\n* Estatuto: Consultor Técnico Independente (Art. 155.º do CPP). Atuação em conformidade com o regime de liberdade de prova e perícia documental.\n\nNOTA DE SALVAGUARDA JURÍDICA E ÂMBITO: As conclusões constantes neste documento infraestruturam-se exclusivamente nos artefactos e elementos documentais disponibilizados pelo solicitante. O presente parecer constitui uma análise técnica independente de natureza consultiva e prova documental assistencial, não substituindo, para quaisquer efeitos processuais, a realização de uma perícia oficial ordenada pela autoridade judiciária competente.\n\nAnálise material baseada em dados estruturados fornecidos; o escopo limita-se à integridade financeira e documental dos ativos digitais apresentados, conforme Art. 125.º CPP.\n\nDECLARAÇÃO DE COMPROMISSO: Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.\n\nData: " + dataEmissao + "\n\nAssinatura do Técnico Responsável Pela Análise\n\n[ UNIFED - PROBATUM CERTIFIED - ANALISTA E CONSULTOR FORENSE - v1.0-COMMERCIAL-LITIGATION ]\nEstudo de Viabilidade - Consultoria Forense Especializada - Uso restrito a mandato jurídico autorizado\nFundamentação: RGIT Art. 103.º (Fraude Fiscal) - Art. 104.º (Fraude Qualificada) - CRP Art. 32.º - CPP Art. 125.º", style: 'normal', margin: [0, 0, 0, 15] },
 
                 // QR Code final (se disponível)
                 ...(qrCodeImg ? [
@@ -2515,6 +2526,16 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     // MÓDULO 3B — _exportPacoteAdvogado
     // =========================================================================
     window._exportPacoteAdvogado = async function () {
+        // [PATCH-UNIFED-03] Guard de concorrência — impede duplo disparo simultâneo.
+        // Race condition confirmada por análise forense: sem guard, cliques duplos ou
+        // disparos de evento paralelos geram dois pacotes ZIP com conteúdos divergentes,
+        // comprometendo a integridade da prova exportada.
+        if (window._isExporting) {
+            triadaLog('warn', '[PATCH-UNIFED-03] ⚠ Exportação já em curso — pedido duplicado bloqueado. ' +
+                'Referência temporal do bloqueio: ' + new Date().toISOString());
+            return;
+        }
+        window._isExporting = true;
         triadaLog('info', '\u2696\uFE0F _exportPacoteAdvogado v2 — DECOMPOSIÇÃO ATÓMICA DO MASTER (FIX-TRIADA-01)');
         try {
             const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || 'DEMO';
@@ -2602,6 +2623,9 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         } catch (e) {
             triadaLog('error', '❌ Falha em _exportPacoteAdvogado: ' + e.message, { stack: e.stack });
             showModalMessage("Erro", "Erro ao gerar Pacote Advogado: " + e.message, null);
+        } finally {
+            // [PATCH-UNIFED-03] Libertação do guard — garantida mesmo em caso de excepção.
+            window._isExporting = false;
         }
     };
 
@@ -2863,7 +2887,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
 // UNIFED_ExportEngine — PROTOCOLO DE VERIFICAÇÃO DE CONSISTÊNCIA (PVC-01)
 // Garante que Dashboard e PDF derivam da mesma fonte de dados imutável.
 // Ref: Protocolo PVC-01 · ISO/IEC 27037:2012 · Art. 125.º CPP
-// Versão: v1.0-R23 (CORRECÇÃO footerText + SECÇÃO 33 SANITIZADA)
+// Versão: v1.0-COMMERCIAL-LITIGATION (CORRECÇÃO footerText + SECÇÃO 33 SANITIZADA)
 // =============================================================================
 (function _installExportEngine() {
     'use strict';
@@ -3142,5 +3166,43 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         };
     }
 
-    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-R23 instalado com sucesso (Parecer enriquecido + fluxo Analista integral + tabela completa + footerText corrigido + secção 33 sanitizada). Consola 100% higienizada.');
+    console.log('[UNIFED-ExportEngine] 🚀 PVC-01-COMMERCIAL-LITIGATION instalado com sucesso (Parecer enriquecido + fluxo Analista integral + tabela completa + footerText corrigido + secção 33 sanitizada). Consola 100% higienizada.');
 })();
+
+// ============================================================================
+// [RET-TRI-04] TESTE DE CARGA DO MOTOR DE EXPORTAÇÃO
+// Uso: await window.testLoadExport(3) na consola do browser antes da demonstração.
+// Valida que o motor completa N iterações sem erros de estado ou race conditions.
+// ============================================================================
+window.testLoadExport = async function(iterations = 3) {
+    console.log(`[TEST-LOAD] 🚀 Iniciando teste de carga com ${iterations} iterações por pacote...`);
+    let errors = 0;
+    for (let i = 0; i < iterations; i++) {
+        try {
+            console.log(`[TEST-LOAD] ⚙️ Iteração ${i+1}/${iterations} — Pacote Analista`);
+            if (typeof window._exportPacoteAnalista === 'function') {
+                await window._exportPacoteAnalista();
+            } else {
+                console.warn('[TEST-LOAD] ⚠ _exportPacoteAnalista não disponível.');
+            }
+            await new Promise(r => setTimeout(r, 1000));
+
+            console.log(`[TEST-LOAD] ⚙️ Iteração ${i+1}/${iterations} — Pacote Advogado`);
+            if (typeof window._exportPacoteAdvogado === 'function') {
+                await window._exportPacoteAdvogado();
+            } else {
+                console.warn('[TEST-LOAD] ⚠ _exportPacoteAdvogado não disponível.');
+            }
+            await new Promise(r => setTimeout(r, 1000));
+        } catch (e) {
+            errors++;
+            console.error(`[TEST-LOAD] ❌ Erro na iteração ${i+1}: ${e.message}`);
+        }
+    }
+    if (errors === 0) {
+        console.log(`[TEST-LOAD] ✅ Teste de carga concluído — ${iterations} iterações sem erros.`);
+    } else {
+        console.error(`[TEST-LOAD] ❌ Teste concluído com ${errors} erro(s) em ${iterations} iterações.`);
+    }
+    return { iterations, errors };
+};

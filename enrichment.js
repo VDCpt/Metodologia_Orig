@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * UNIFED - PROBATUM · enrichment.js · v1.3-PDF · RETIFICAÇÃO CIRÚRGICA (HEADER CORRIGIDO)
+ * UNIFED - PROBATUM · enrichment.js · v1.0-COMMERCIAL-LITIGATION · RETIFICAÇÃO GERAL
  * ============================================================================
  * RETIFICAÇÕES APLICADAS (v1.3-PDF):
  *   1. Substituída a função exportPeticaoInicial() por uma versão que gera

@@ -294,8 +294,12 @@ class ChainOfCustodyManager {
 
     async seal() {
         if (this.sealed) return this.masterHash;
+        // [RET-INJ-02] Só recalcula se ainda não tiver masterHash, evitando
+        // sobrescrita de hash já calculado por applyTimestampAndMerkle().
         await applyTimestampAndMerkle();
-        await this.calculateMasterHash();
+        if (!this.masterHash) {
+            await this.calculateMasterHash();
+        }
         this.sealed = true;
 
         if (window.UNIFEDSystem) {
@@ -620,196 +624,13 @@ document.addEventListener('click', function(e) {
 });
 
 // ============================================================================
-// _syncPureDashboard com Retry Pattern + Sincronia Evento
+// [RET-INJ-01] _syncPureDashboard — definição canónica reside em script.js.
+// Esta versão duplicada foi eliminada para evitar sobrescrita do padrão
+// Retry+Debounce implementado no módulo principal. A instância activa é
+// window._syncPureDashboard de script.js, carregada antes deste módulo.
+// Referência de auditoria: RET-INJ-01 · UNIFED-PROBATUM v1.0-COMMERCIAL-LITIGATION
 // ============================================================================
-window._syncPureDashboard = (function() {
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
-    const RETRY_DELAY_MS = 50; // FALHA 14 — R24: reduzido de 100 → 50ms
-    let syncPending = false;
 
-    function performSync(system, isRetry = false) {
-        if (!system || !system.analysis) {
-            if (!isRetry && retryCount < MAX_RETRIES) {
-                retryCount++;
-                setTimeout(() => performSync(system, true), RETRY_DELAY_MS);
-                return;
-            }
-            console.error('[UNIFED-SYNC] ❌ Dados de análise ausentes.');
-            return;
-        }
-
-        let totals = system.analysis.totals;
-        if (!totals || Object.keys(totals).length === 0) {
-            const saftBruto = system.documents?.saft?.totals?.bruto || 0;
-            const ganhos = system.documents?.statements?.totals?.ganhos || 0;
-            const despesas = system.documents?.statements?.totals?.despesas || 0;
-            const ganhosLiquidos = system.documents?.statements?.totals?.ganhosLiquidos || 0;
-            const faturaPlataforma = system.documents?.invoices?.totals?.invoiceValue || 0;
-            const dac7TotalPeriodo = system.documents?.dac7?.totals?.totalPeriodo || 
-                (system.documents?.dac7?.totals?.q1 + system.documents?.dac7?.totals?.q2 +
-                 system.documents?.dac7?.totals?.q3 + system.documents?.dac7?.totals?.q4) || 0;
-
-            if (saftBruto === 0 && ganhos === 0 && despesas === 0) {
-                if (!isRetry && retryCount < MAX_RETRIES) {
-                    retryCount++;
-                    setTimeout(() => performSync(system, true), RETRY_DELAY_MS);
-                    return;
-                }
-                const _sessionRef = system?.sessionId || 'SESSÃO_DESCONHECIDA';
-                console.warn(
-                    `[UNIFED-SYNC] ⚠️ Dados parciais ou ausentes após ${MAX_RETRIES} tentativas (${MAX_RETRIES * RETRY_DELAY_MS}ms). ` +
-                    `Sessão: ${_sessionRef}. ` +
-                    `saftBruto=${system?.documents?.saft?.totals?.bruto ?? 'N/D'}, ` +
-                    `ganhos=${system?.documents?.statements?.totals?.ganhos ?? 'N/D'}, ` +
-                    `despesas=${system?.documents?.statements?.totals?.despesas ?? 'N/D'}. ` +
-                    'Injeção abortada — evitar contaminação de prova com valores nulos.'
-                );
-                return;
-            }
-            totals = { saftBruto, ganhos, despesas, ganhosLiquidos, faturaPlataforma, dac7TotalPeriodo };
-        }
-
-        const lang = window.currentLang || 'pt';
-        const fmt = (val) => new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'pt-PT', {
-            style: 'currency', currency: 'EUR'
-        }).format(val || 0);
-
-        const mapping = {
-            'pure-ganhos-reais': totals.ganhos,
-            'pure-despesas-reais': totals.despesas,
-            'pure-liquido-real': totals.ganhosLiquidos,
-            'pure-saft-bruto': totals.saftBruto,
-            'pure-dac7-total': totals.dac7TotalPeriodo,
-            'pure-fatura-btf': totals.faturaPlataforma,
-            'pure-sg1-saft-val': totals.saftBruto,
-            'pure-sg1-dac7-val': totals.dac7TotalPeriodo,
-            'pure-sg1-delta': (system.analysis.crossings?.discrepanciaSaftVsDac7) ?? (totals.saftBruto - totals.dac7TotalPeriodo),
-            'pure-sg2-btor-val': totals.despesas,
-            'pure-sg2-btf-val': totals.faturaPlataforma,
-            'pure-sg2-delta': (system.analysis.crossings?.discrepanciaCritica) ?? (totals.despesas - totals.faturaPlataforma)
-        };
-
-        let updated = 0;
-        for (const [id, val] of Object.entries(mapping)) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.setAttribute('data-i18n-ignore', 'true');
-                el.innerText = fmt(val);
-                updated++;
-            }
-        }
-
-        if (document.getElementById('pure-nif')) {
-            const nifEl = document.getElementById('pure-nif');
-            nifEl.setAttribute('data-i18n-ignore', 'true');
-            nifEl.innerText = system.user?.nif || system.nif || 'N/A';
-            updated++;
-        }
-        if (document.getElementById('pure-session-id')) {
-            const sidEl = document.getElementById('pure-session-id');
-            sidEl.setAttribute('data-i18n-ignore', 'true');
-            sidEl.innerText = system.sessionId || system.session?.id || 'N/A';
-            updated++;
-        }
-
-        const pctSG1 = (system.analysis.crossings?.percentagemSaftVsDac7) ??
-            (totals.saftBruto > 0 ? ((totals.saftBruto - totals.dac7TotalPeriodo) / totals.saftBruto * 100) : 0);
-        const pctSG2 = (system.analysis.crossings?.percentagemOmissao) ??
-            (totals.despesas > 0 ? ((totals.despesas - totals.faturaPlataforma) / totals.despesas * 100) : 0);
-        const _pct1El = document.getElementById('pure-sg1-pct');
-        if (_pct1El) { _pct1El.setAttribute('data-i18n-ignore', 'true'); _pct1El.innerText = `(${pctSG1.toFixed(2)}%)`; updated++; }
-        const _pct2El = document.getElementById('pure-sg2-pct');
-        if (_pct2El) { _pct2El.setAttribute('data-i18n-ignore', 'true'); _pct2El.innerText = `(${pctSG2.toFixed(2)}%)`; updated++; }
-
-        const sg1Delta = mapping['pure-sg1-delta'];
-        const sg2Delta = mapping['pure-sg2-delta'];
-        if (sg1Delta > 0.01 && document.getElementById('smoking-gun-1')) document.getElementById('smoking-gun-1').style.display = 'flex';
-        if (sg2Delta > 0.01 && document.getElementById('smoking-gun-2')) document.getElementById('smoking-gun-2').style.display = 'flex';
-
-        // FALHA 2 — R24: leitura dinâmica de auxiliaryData (não constante hardcoded)
-        const _totalNaoSujeitos = (system.auxiliaryData && system.auxiliaryData.totalNaoSujeitos != null)
-            ? system.auxiliaryData.totalNaoSujeitos
-            : 451.15; // fallback apenas se auxiliaryData não disponível
-        const _btor = totals.despesas || 0;
-        const _btf = totals.faturaPlataforma || 0;
-        const _ganhos = totals.ganhos || 0;
-        const _saftBruto = totals.saftBruto || 0;
-        const _baseOmissaComissoes = parseFloat((_btor - _btf).toFixed(2));
-        const _iva23Omitido = _baseOmissaComissoes > 0 ? parseFloat((_baseOmissaComissoes * 0.23).toFixed(2)) : 0;
-        const _baseOmissaProveitos = parseFloat((_ganhos - _saftBruto).toFixed(2));
-        const _iva6Omitido = _baseOmissaProveitos > 0 ? parseFloat((_baseOmissaProveitos * 0.06).toFixed(2)) : 0;
-
-        if (system && system.analysis) {
-            system.analysis.totalNaoSujeitos = _totalNaoSujeitos;
-            system.analysis.iva23Omitido = _iva23Omitido;
-            system.analysis.iva6Omitido = _iva6Omitido;
-        }
-
-        const _elZonaCinzenta = document.querySelector('[data-id="zona-cinzenta"]');
-        if (_elZonaCinzenta) { _elZonaCinzenta.innerText = _totalNaoSujeitos.toFixed(2) + ' €'; updated++; }
-        const _elIva23 = document.querySelector('[data-id="iva-23-omitido"]');
-        if (_elIva23) { _elIva23.innerText = _iva23Omitido.toFixed(2) + ' €'; updated++; }
-        const _elIva6 = document.querySelector('[data-id="iva-6-omitido"]');
-        if (_elIva6) { _elIva6.innerText = _iva6Omitido.toFixed(2) + ' €'; updated++; }
-        const _elIva23Val = document.getElementById('iva23Value');
-        if (_elIva23Val) { _elIva23Val.innerText = fmt(_iva23Omitido); updated++; }
-        const _elIva6Val = document.getElementById('iva6Value');
-        if (_elIva6Val) { _elIva6Val.innerText = fmt(_iva6Omitido); updated++; }
-
-        // ── RECTIFICAÇÃO R24-MACRO (RETIFICADO) ───────────────────────────────────
-        const cross = system.analysis?.crossings || {};
-        const macroMeses = (system.dataMonths && system.dataMonths.size > 0) ? system.dataMonths.size : 1;
-        const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
-        // Integração obrigatória da heurística de segurança forense (0.85)
-        const macroMensal   = (macroMedia * 38000) * 0.85;
-        const macroAnual    = macroMensal * 12;
-        const macro7Anos    = macroAnual * 7;
-        const fmtMacro = window.formatForensicCurrency || fmt;
-
-        const macroMediaEl  = document.getElementById('pure-macro-media');
-        const macroMensalEl = document.getElementById('pure-macro-mensal');
-        const macroAnualEl  = document.getElementById('pure-macro-anual');
-        const macro7AnosEl  = document.getElementById('pure-macro-7anos');
-        if (macroMediaEl)  { macroMediaEl.innerText  = fmtMacro(macroMedia);  updated++; }
-        if (macroMensalEl) { macroMensalEl.innerText = fmtMacro(macroMensal); updated++; }
-        if (macroAnualEl)  { macroAnualEl.innerText  = fmtMacro(macroAnual);  updated++; }
-        if (macro7AnosEl)  { macro7AnosEl.innerText  = fmtMacro(macro7Anos);  updated++; }
-        // ── FIM RECTIFICAÇÃO R24-MACRO ────────────────────────────────────────────
-
-        // ── CORREÇÃO DA ZONA CINZENTA ─────────────────────────────────────────────
-        const _zcAmountEl = document.getElementById('pure-zc-amount');
-        if (_zcAmountEl) {
-            _zcAmountEl.innerText = fmt(_totalNaoSujeitos);
-            _zcAmountEl.setAttribute('data-i18n-ignore', 'true');
-            updated++;
-        }
-        // ──────────────────────────────────────────────────────────────────────────
-
-        // Master hash consolidado e Desbloqueio da UI
-        const masterHash = system.masterHash || window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash || 'GERACAO_PENDENTE';
-        // Injeção do seletor #pure-dynamic-hash-section-v para remover [A PROCESSAR ASSINATURA DIGITAL...]
-        document.querySelectorAll('.master-hash-value, .hash-value, #pure-hash-prefix, #pure-hash-prefix-verdict, #pure-dynamic-hash-section-v').forEach(el => {
-            if(el && el.textContent !== masterHash) {
-                el.setAttribute('data-i18n-ignore','true');
-                el.textContent = masterHash;
-            }
-        });
-        if(typeof window.generateQRCode === 'function') window.generateQRCode();
-
-        console.log(`[UNIFED-PURE] ✅ Dashboard sincronizado — ${updated} elementos atualizados.`);
-        retryCount = 0;
-        syncPending = false;
-        return updated;
-    }
-
-    const sync = (system, isRetry = false) => {
-        if (syncPending && !isRetry) return 1;
-        syncPending = true;
-        return performSync(system, isRetry);
-    };
-    return sync;
-})();
 
 let _syncDebounceTimer = null;
 let _isSyncing = false;
@@ -956,11 +777,12 @@ document.addEventListener('UNIFED_TRIADA_READY', function() {
     }
 });
 
-if (window.UNIFEDSystem && !Object.isExtensible(window.UNIFEDSystem)) {
-    console.warn('[INJECTION] UNIFEDSystem não extensível. A tornar extensível via cópia.');
-    const newSys = Object.assign({}, window.UNIFEDSystem);
-    window.UNIFEDSystem = newSys;
-}
+// [RET-INJ-03] Bloco de extensibilidade de UNIFEDSystem REMOVIDO.
+// Racionale: após selagem (seal()), UNIFEDSystem deve permanecer imutável.
+// A conversão para objecto extensível violava a integridade da cadeia de custódia.
+// Qualquer módulo que requeira mutação de UNIFEDSystem pós-selagem deve ser
+// refatorado para trabalhar com uma cópia de trabalho isolada.
+// Referência de auditoria: RET-INJ-03 · ISO/IEC 27037:2012 §6.3
 
 if (typeof window.UNIFED_NEXUS_INIT === 'function') {
     window.UNIFED_NEXUS_INIT();

@@ -644,9 +644,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (regenerateBtn) {
         regenerateBtn.addEventListener('click', function() {
             console.log('[UI-TOP3] 🔄 Regenerando TOP 3...');
-            if (window.UNIFED_AnalysisCognitive && window.UNIFEDSystem && window.UNIFEDSystem.analysis) {
-                window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(window.UNIFEDSystem.analysis.btor);
+            // [PATCH-UNIFED-02] Validação de integridade do payload BTOR no ponto de disparo.
+            // Guard aplicado no listener (não no receptor) para abortar silenciosamente
+            // quando os dados de análise ainda não estão disponíveis.
+            const _btor = window.UNIFEDSystem?.analysis?.btor;
+            if (!window.UNIFED_AnalysisCognitive || !window.UNIFEDSystem?.analysis) {
+                console.warn('[UI-TOP3] ⚠ ABORTADO: motor cognitivo ou objecto analysis indisponível.');
+                return;
             }
+            if (!_btor || typeof _btor !== 'object') {
+                console.warn('[UI-TOP3] ⚠ ABORTADO: dados BTOR inválidos ou inexistentes. Complete a análise primeiro.');
+                return;
+            }
+            window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(_btor);
         });
 
         regenerateBtn.addEventListener('mouseover', function() {
@@ -3442,23 +3452,11 @@ function switchLanguage() {
     console.log('[UNIFED-LANG] Tradução concluída com sucesso.');
 }
 
+// [RET-JS-01] translateDataLangElements() REMOVIDA — funcionalidade unificada
+// em window.translateAll() (ver abaixo). Referência: RET-JS-01.
 function translateDataLangElements() {
-    const elements = document.querySelectorAll('[data-pt][data-en]');
-    elements.forEach(el => {
-        const translation = el.getAttribute(`data-${currentLang}`);
-        if (translation) {
-            if (el.childNodes.length === 1 && el.childNodes[0].nodeType === Node.TEXT_NODE) {
-                el.textContent = translation;
-            } else {
-                const original = el.innerHTML;
-                const ptText = el.getAttribute('data-pt') || '';
-                const enText = el.getAttribute('data-en') || '';
-                if (ptText && enText && original.includes(ptText)) {
-                    el.innerHTML = original.replace(ptText, enText);
-                }
-            }
-        }
-    });
+    // Stub de compatibilidade — delega para o motor unificado
+    if (typeof window.translateAll === 'function') return window.translateAll();
 }
 
 // ============================================================================
@@ -8896,15 +8894,33 @@ window._syncPureDashboard = (function() {
                 const stdDev = Math.sqrt(diffs.map(x => Math.pow(x - avg, 2)).reduce((a, b) => a + b, 0) / diffs.length);
                 const cv     = avg > 0 ? stdDev / avg : 1;
                 const score  = Math.round(Math.max(0, Math.min(100, 100 * (1 - Math.min(1, cv)))));
-                const classify = score > 75 ? 'OMISSÃO SISTÉMICA / RISCO ELEVADO'
-                    : score > 40 ? 'OMISSÃO PONTUAL / RISCO MODERADO'
-                    : 'VARIAÇÃO ESPORÁDICA / RISCO BAIXO';
+                // [RET-JS-02b] ATF: textos dependentes do idioma activo (window.currentLang)
+                const _atfClassifyText = (s) => {
+                    if (window.currentLang === 'en') {
+                        if (s > 75) return 'SYSTEMATIC OMISSION / HIGH RISK';
+                        if (s > 40) return 'POINT OMISSION / MODERATE RISK';
+                        return 'SPORADIC VARIATION / LOW RISK';
+                    }
+                    if (s > 75) return 'OMISSÃO SISTÉMICA / RISCO ELEVADO';
+                    if (s > 40) return 'OMISSÃO PONTUAL / RISCO MODERADO';
+                    return 'VARIAÇÃO ESPORÁDICA / RISCO BAIXO';
+                };
+                const classify = _atfClassifyText(score);
                 // Tendência simples: compare última metade vs primeira metade
                 const mid    = Math.floor(diffs.length / 2);
                 const firstH = diffs.slice(0, mid).reduce((a, b) => a + b, 0) / (mid || 1);
                 const lastH  = diffs.slice(mid).reduce((a, b) => a + b, 0) / ((diffs.length - mid) || 1);
-                const trendTxt = lastH > firstH * 1.05 ? '📈 ASCENDENTE'
-                    : lastH < firstH * 0.95 ? '📉 DESCENDENTE' : '➡️ ESTÁVEL';
+                const _atfTrendText = (lH, fH) => {
+                    if (window.currentLang === 'en') {
+                        if (lH > fH * 1.05) return '📈 ASCENDING';
+                        if (lH < fH * 0.95) return '📉 DESCENDING';
+                        return '➡️ STABLE';
+                    }
+                    if (lH > fH * 1.05) return '📈 ASCENDENTE';
+                    if (lH < fH * 0.95) return '📉 DESCENDENTE';
+                    return '➡️ ESTÁVEL';
+                };
+                const trendTxt = _atfTrendText(lastH, firstH);
                 if (atfSpEl) {
                     atfSpEl.setAttribute('data-i18n-ignore', 'true');
                     atfSpEl.innerHTML = score + '<span style="font-size:1rem;opacity:0.6">/100</span>';
@@ -9051,15 +9067,56 @@ document.addEventListener('UNIFED_ANALYSIS_COMPLETE', function() {
 
 console.log('[UNIFED-SCRIPT] ✅ Data-Binding com Tradução Dinâmica RESTAURADO');
 
+// [RET-JS-02] translateAll — motor unificado de i18n com suporte a atributos
+// adicionais: data-i18n-placeholder, data-i18n-title, data-i18n-value.
 window.translateAll = function() {
     const lang = window.currentLang || 'pt';
     const targetAttr = lang === 'en' ? 'data-en' : 'data-pt';
     let translated = 0;
+
+    // Tradução de conteúdo textual (data-pt / data-en)
     document.querySelectorAll('[data-pt][data-en]').forEach(el => {
-        if(el.hasAttribute('data-i18n-ignore')) return;
+        if (el.hasAttribute('data-i18n-ignore')) return;
         const text = el.getAttribute(targetAttr);
-        if(text) { el.textContent = text; translated++; }
+        if (text) { el.textContent = text; translated++; }
     });
+
+    // Tradução de placeholders (data-i18n-placeholder)
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        if (el.hasAttribute('data-i18n-ignore')) return;
+        const key = el.getAttribute('data-i18n-placeholder');
+        const translation = typeof window.getTranslation === 'function'
+            ? window.getTranslation(key, lang) : null;
+        if (translation && el.placeholder !== translation) {
+            el.placeholder = translation;
+            translated++;
+        }
+    });
+
+    // Tradução de títulos tooltip (data-i18n-title)
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        if (el.hasAttribute('data-i18n-ignore')) return;
+        const key = el.getAttribute('data-i18n-title');
+        const translation = typeof window.getTranslation === 'function'
+            ? window.getTranslation(key, lang) : null;
+        if (translation && el.title !== translation) {
+            el.title = translation;
+            translated++;
+        }
+    });
+
+    // Tradução de valores de campo (data-i18n-value)
+    document.querySelectorAll('[data-i18n-value]').forEach(el => {
+        if (el.hasAttribute('data-i18n-ignore')) return;
+        const key = el.getAttribute('data-i18n-value');
+        const translation = typeof window.getTranslation === 'function'
+            ? window.getTranslation(key, lang) : null;
+        if (translation && el.value !== translation) {
+            el.value = translation;
+            translated++;
+        }
+    });
+
     console.log(`[I18N] ${translated} elementos traduzidos para ${lang.toUpperCase()}`);
     return translated;
 };
