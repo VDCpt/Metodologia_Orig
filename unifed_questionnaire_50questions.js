@@ -131,8 +131,8 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'B',
             title: 'Triangulação DAC7 vs SAF-T',
             text: 'Foram identificadas omissões de faturação (faturas em extrato bancário mas não em SAF-T)?',
-            norma: 'Art. 78º CIVA (Obrigação de Faturação)',
-            implicacao: 'Omissões são indicadores de sonegação fiscal intencional (Art. 108º CIVA — Sanções).',
+            norma: 'Art. 29.º n.º1 al. b) CIVA (Obrigação de Faturação)',
+            implicacao: 'Omissões são indicadores de sonegação fiscal intencional — Art. 103.º RGIT (Fraude Fiscal).',
             defesa: 'Listar explicitamente cada fatura omitida, valor, data e NIF cliente.'
         },
         {
@@ -140,7 +140,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'B',
             title: 'Triangulação DAC7 vs SAF-T',
             text: 'Foram identificadas subfaturações (fatura em SAF-T com valor menor do que em extrato bancário)?',
-            norma: 'Art. 108º CIVA (Subdeclaração)',
+            norma: 'Art. 103.º RGIT (Fraude Fiscal — Subdeclaração)',
             implicacao: 'Subfaturações indicam manipulação intencional de registos contabilísticos.',
             defesa: 'Calcular diferença de valor (€ e %), itemizar por período e cliente.'
         },
@@ -234,7 +234,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'C',
             title: 'Nexus-Zero / Apropriação Indevida',
             text: 'Existe evidência de que a plataforma retém valores mas não os declara ao operador em extracto detalhado (discriminação)?',
-            norma: 'Art. 78º CIVA (Faturação com Discriminação)',
+            norma: 'Art. 29.º n.º1 al. b) CIVA (Faturação com Discriminação — Discriminação Obrigatória)',
             implicacao: 'Sem discriminação clara, o operador não consegue validar legitimidade das retenções.',
             defesa: 'Solicitar extracts detalhados à plataforma ou comprovar recusa de fornecer.'
         },
@@ -261,7 +261,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'C',
             title: 'Nexus-Zero / Apropriação Indevida',
             text: 'Existe evidência de que a plataforma utiliza valores retidos para fins próprios (cash flow interno) sem remuneração ao operador?',
-            norma: 'Art. 108º CIVA (Apropriação Indevida de Meios)',
+            norma: 'Art. 103.º RGIT (Fraude Fiscal — Apropriação Indevida)',
             implicacao: 'Utilização de valores sem consentimento expresso constitui desvio de bens.',
             defesa: 'Análise de saídas de caixa da plataforma comparadas com depósitos de retenção.'
         },
@@ -413,7 +413,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'E',
             title: 'Responsabilidade Normas de Conformidade Fiscal',
             text: 'A omissão de rendimentos detectada é intencional (dolosa) ou resultado de erro administrativo (culpa)?',
-            norma: 'Art. 108º CIVA (Graus de Culpabilidade)',
+            norma: 'Art. 103.º RGIT (Fraude Fiscal — Graus de Culpabilidade)',
             implicacao: 'Intenção agrava significativamente as sanções (até 150% vs. 15% por engano).',
             defesa: 'Análise de padrões: se a omissão é sistemática, sugere intenção; se pontual, sugere erro.'
         },
@@ -422,7 +422,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'E',
             title: 'Responsabilidade Normas de Conformidade Fiscal',
             text: 'O operador realizou diligência devida para validar as retenções da plataforma (ex: solicitando esclarecimentos)?',
-            norma: 'Art. 78º CIVA § 2 (Dever de Validação)',
+            norma: 'Art. 29.º n.º1 al. b) CIVA (Dever de Validação de Faturação)',
             implicacao: 'Negligência do operador em validar não elimina responsabilidade da plataforma.',
             defesa: 'Cronologia de contactos do operador com plataforma solicitando esclarecimentos.'
         },
@@ -440,7 +440,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'E',
             title: 'Responsabilidade Normas de Conformidade Fiscal',
             text: 'O imposto evadido durante a omissão foi posteriormente regularizado (ex: após descoberta) ou mantém-se em aberto?',
-            norma: 'Art. 108º, n.º 5 CIVA (Regularização Espontânea)',
+            norma: 'Art. 22.º RGIT (Regularização Espontânea — Atenuação de Sanções)',
             implicacao: 'Regularização espontânea reduz sanções; falta de regularização agrava.',
             defesa: 'Data de regularização, valor regularizado, juros e multas pagas.'
         },
@@ -449,8 +449,8 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'E',
             title: 'Responsabilidade Normas de Conformidade Fiscal',
             text: 'A plataforma era obrigada a emitir fatura (ex: pelo montante da retenção) ou estava isenta por legislação local?',
-            norma: 'Art. 78º CIVA (Obrigação de Faturação)',
-            implicacao: 'Isenção legal elimina responsabilidade; obrigação não cumprida constitui infração.',
+            norma: 'Art. 29.º n.º1 al. b) CIVA (Obrigação de Faturação)',
+            implicacao: 'Isenção legal elimina responsabilidade; obrigação não cumprida constitui infração fiscal — Art. 103.º RGIT.',
             defesa: 'Documentação da legislação local aplicável (ex: país de residência da plataforma).'
         },
         {
@@ -467,7 +467,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'E',
             title: 'Responsabilidade Normas de Conformidade Fiscal',
             text: 'O operador tinha direito de dedução de IVA sobre as comissões realmente remuneradas ou sobre as comissões declaradas em SAF-T?',
-            norma: 'Art. 98º CIVA (Direito de Dedução)',
+            norma: 'Art. 19.º a 25.º CIVA (Direito à Dedução de IVA)',
             implicacao: 'Dedução excessiva baseada em valores inflacionados também constitui infração.',
             defesa: 'Reconciliação de deduções reclamadas vs. valores realmente despendidos.'
         },
@@ -476,7 +476,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'E',
             title: 'Responsabilidade Normas de Conformidade Fiscal',
             text: 'A plataforma beneficiou-se de regime fiscal especial (ex: isenção startup) que poderia justificar a retenção sem declaração?',
-            norma: 'Art. 36º CIVA § 6 (Regimes Especiais)',
+            norma: 'Art. 9.º e Art. 53.º CIVA (Isenções e Regimes Especiais)',
             implicacao: 'Regime especial pode eliminar responsabilidade, mas deve ser legalmente comprovado.',
             defesa: 'Documentação de aprovação de regime especial pela autoridade tributária.'
         },

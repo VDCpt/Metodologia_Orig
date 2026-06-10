@@ -311,6 +311,27 @@ export default {
         }
         // ─────────────────────────────────────────────────────────────────────
 
+        // ── [UNIFED-PROXY-005] GUARDA ANTECIPADA DE CONTENT-TYPE ──────────────
+        // Rejeição imediata de payloads não-JSON antes de qualquer parsing de body.
+        // Posição: após validação de token e antes de rate limiting — impede que
+        // payloads malformados (potencial vector de injeção RAG) atinjam o pipeline.
+        // A validateContentType() do passo 4 permanece como segunda linha de defesa.
+        if (request.method === 'POST' && !validateContentType(request)) {
+            const _ctHeader = request.headers.get('content-type') || '(ausente)';
+            console.error(`[UNIFED-PROXY][${requestId}] ⛔ UNIFED-PROXY-005: Content-Type rejeitado: ${_ctHeader}`);
+            return new Response(JSON.stringify({
+                error:     'Unsupported Media Type',
+                detail:    `Content-Type "${_ctHeader}" não é permitido. Requerido: application/json`,
+                code:      'INVALID_CONTENT_TYPE',
+                requestId: requestId
+            }), {
+                status:  415,
+                headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                           ...generateForensicHeaders(requestId) }
+            });
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         // ── FAILSAFE DE CHAVE ENCRIPTADA (REQ-02c) ────────────────────────────
         // Bloqueia execução se ANTHROPIC_API_KEY:
         //   (a) não estiver definida, OU

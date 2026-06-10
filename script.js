@@ -2707,7 +2707,7 @@ const translations = {
         pdfLegalDL28: "Decreto-Lei n.º 28/2019 - Integridade do processamento de dados e validade de documentos eletrónicos",
         pdfLegalCPP125: "Art. 125.º CPP - Admissibilidade dos meios de prova (Prova Digital Material)",
         pdfConclusionText: "Conclui-se pela existência de Prova Digital Material de desconformidade. Este parecer técnico constitui base suficiente para a interposição de ação judicial e apuramento de responsabilidade civil/criminal, servindo o propósito de proteção jurídica do mandato dos advogados intervenientes.",
-        pdfFooterLine1: "Art. 103.º e 104.º Normas de Conformidade Fiscal · ISO/IEC 27037 · CSC · DL 28/2019",
+        pdfFooterLine1: "Art. 103.º RGIT (Fraude Fiscal) · Art. 29.º n.º1 al. b) CIVA · ISO/IEC 27037 · DL 28/2019",
         pdfLabelName: "Nome / Name",
         pdfLabelNIF: "NIF / Tax ID",
         pdfLabelSession: "Perícia n.º / Expert Report No.",
@@ -2838,7 +2838,7 @@ const translations = {
         pdfLegalDL28: "Decree-Law No. 28/2019 - Data processing integrity and validity of electronic documents",
         pdfLegalCPP125: "Art. 125 CPP - Admissibility of evidence (Digital Material Evidence)",
         pdfConclusionText: "We conclude that there is Material Digital Evidence of non-compliance. This technical opinion constitutes a sufficient basis for the filing of legal action and determination of civil/criminal liability, serving the purpose of legal protection of the mandate of the intervening lawyers.",
-        pdfFooterLine1: "Art. 103 and 104 Normas de Conformidade Fiscal · ISO/IEC 27037 · CSC · DL 28/2019",
+        pdfFooterLine1: "Art. 103 RGIT (Tax Fraud) · Art. 29(1)(b) CIVA · ISO/IEC 27037 · DL 28/2019",
         pdfLabelName: "Name",
         pdfLabelNIF: "Tax ID",
         pdfLabelSession: "Expertise No.",
@@ -5758,7 +5758,7 @@ async function performAudit() {
 
         console.log('🔍 VALORES EXTRAÍDOS (v1.0-COMMERCIAL-LITIGATION):');
         console.log('   SAF-T Bruto:', formatCurrency(saftBruto));
-        console.log('   SAF-T Ilíquido:', formatCurrency(saftIliquido));
+        console.log('   Omissão Receita (Ganhos vs SAF-T):', formatCurrency(saftIliquido));
         console.log('   SAF-T IVA:', formatCurrency(saftIva));
         console.log('   Extrato - Ganhos:', formatCurrency(stmtGanhos));
         console.log('   Extrato - Despesas:', formatCurrency(stmtDespesas));
@@ -8809,7 +8809,7 @@ window._syncPureDashboard = (function() {
             const quantumNoteEl = document.getElementById('quantumNote');
             if (quantumNoteEl) {
                 quantumNoteEl.setAttribute('data-i18n-ignore', 'true');
-                quantumNoteEl.innerHTML = `IVA 23% (Omissão Custos): ${fmt(iva23Val)} | IVA 6% (SAF-T Ilíquido): ${fmt(iva6Val)}`;
+                quantumNoteEl.innerHTML = `IVA 23% (Omissão Custos): ${fmt(iva23Val)} | IVA 6% (Omissão Receita — Ganhos vs SAF-T): ${fmt(iva6Val)}`;
                 updated++;
             }
             // ── FIM RECTIFICAÇÃO R24-PASSO3 ──────────────────────────────────────────
@@ -8863,7 +8863,10 @@ window._syncPureDashboard = (function() {
             const macroMeses = (system.dataMonths && system.dataMonths.size > 0)
                 ? system.dataMonths.size : 1;
             const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
-            const macroMensal   = macroMedia * 38000;
+            // [UNIFED-SCR-001] Factor conservador 0.85 aplicado para alinhar com
+            // calcularDanoConservador() (Cálculo Tributário Pericial).
+            // Garante métrica única e irrefutável em toda a interface.
+            const macroMensal   = (macroMedia * 38000) * 0.85;
             const macroAnual    = macroMensal * 12;
             const macro7Anos    = macroAnual * 7;
             const fmtMacro = window.formatForensicCurrency || fmt;

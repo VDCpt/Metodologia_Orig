@@ -1542,6 +1542,45 @@
     color: #f1f5f9 !important; /* Restaura a legibilidade do texto */
 }
 
+/* ── [UNIFED-CSS-004] REFORÇO @media print — Smoking Guns e Discrepâncias ──
+   Garante que #smoking-gun-1 e #smoking-gun-2 são visíveis na impressão/PDF
+   (display: table-row) e que .has-discrepancy mantém a sinalização visual.
+   ZERO alteração a regras de ecrã — scope restrito a @media print.          */
+@media print {
+    /* Linhas de Smoking Gun visíveis como table-row na impressão */
+    #smoking-gun-1,
+    #smoking-gun-2,
+    #smoking-gun-1.is-visible,
+    #smoking-gun-2.is-visible {
+        display: table-row !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    /* Tabela de materialidade visível como table na impressão */
+    #smoking-gun-table,
+    #smoking-gun-table.is-visible {
+        display: table !important;
+        width: 100% !important;
+    }
+
+    /* Sinalização de discrepância preservada na impressão */
+    .has-discrepancy {
+        border-left: 4px solid #ef4444 !important;
+        background: rgba(239, 68, 68, 0.08) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* pure-card-alert — enquadramento de alerta preservado */
+    .pure-card-alert {
+        border: 1px solid #ef4444 !important;
+        background: rgba(239, 68, 68, 0.05) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
 /* ── PREVENÇÃO DE CONGELAMENTO DA MAIN THREAD (CHART.JS) ── */
 #atfTrendChartContainer {
     position: relative !important;

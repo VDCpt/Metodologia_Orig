@@ -1973,7 +1973,7 @@
                                     { text: formatForensicCurrency(omissaoCustos), bold: true, fontSize: 12, color: '#ef4444' },
                                     { text: '(' + percOmissaoCustos.toFixed(2) + '%)', fontSize: 8, color: '#f87171' }
                                 ], alignment: 'center', fillColor: '#1a0808', margin: [4,6,4,6] },
-                                { text: 'Art. 103.º RGIT (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
+                                { text: 'Art. 103.º RGIT (Fraude Fiscal) · Art. 29.º n.º1 al. b) CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
                             ],
                             // PROVA RAINHA I — RETENÇÃO ILÍCITA
                             [
@@ -1994,7 +1994,7 @@
                                     { text: formatForensicCurrency(omissaoReceita), bold: true, fontSize: 12, color: '#f59e0b' },
                                     { text: '(' + m.discrepancyPct.toFixed(2) + '%)', fontSize: 8, color: '#fbbf24' }
                                 ], alignment: 'center', fillColor: '#1a1400', margin: [4,6,4,6] },
-                                { text: 'Art. 406.º CC (Declaração SAF-T) · Lei 8/2012 (DAC7) · Art. 125.º CPP', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
+                                { text: 'DL 28/2019 e Portaria 321-A/2007 (SAF-T) · Lei 17/2023 (DAC7) · Art. 125.º CPP', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
                             ]
                         ]
                     },

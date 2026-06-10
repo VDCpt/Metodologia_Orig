@@ -144,7 +144,7 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     'triada_omission_pct_label': { 'pt': 'Taxa de Omissão (%)', 'en': 'Omission Rate (%)' },
     'triada_gap_btor_btf_label': { 'pt': 'Desvio BTOR-BTF (Base Tributável |BTOR-BTF|)', 'en': 'BTOR-BTF Gap (Tax Base |BTOR-BTF|)' },
     'triada_iva_23_label': { 'pt': 'IVA em Falta (taxa de 23%)', 'en': 'Missing VAT (23% rate)' },
-    'triada_iva_6_label': { 'pt': 'IVA em Falta (taxa de 6%)', 'en': 'Missing VAT (6% rate)' },
+    'triada_iva_6_label': { 'pt': 'IVA 6% (Omissão Receita — Ganhos vs SAF-T)', 'en': 'VAT 6% (Revenue Omission — Earnings vs SAF-T)' },
     'triada_disclosure_selective': { 'pt': 'Divulgação Selectiva: prova de integridade sem exposição da base completa', 'en': 'Selective Disclosure: integrity proof without exposing the full question database' },
 
     // ════════════════════════════════════════════════════════════════════════
