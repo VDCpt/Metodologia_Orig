@@ -2561,10 +2561,14 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     // =========================================================================
     // MÓDULO 3B — _exportPacoteAdvogado
     // =========================================================================
-    // ── PATCH P2 — patch_unifed_macro_v13 (fila Promise + structuredClone) ────
-    // ANTERIOR: flag _isExporting permitia race condition em cliques duplos.
-    // CORRIGIDO: exportQueue serializa chamadas; structuredClone garante
-    // snapshot imutável do estado no momento exacto do disparo.
+    // ── PATCH P2-FIX — patch_unifed_macro_v13 (correcção DataCloneError) ─────
+    // ANTERIOR: structuredClone(window.UNIFEDSystem) lançava DataCloneError
+    // porque UNIFEDSystem contém funções (ex: callbacks de activação de
+    // contexto), não clonáveis pelo algoritmo de clonagem estruturada.
+    // CORRIGIDO: JSON.parse(JSON.stringify(...)) remove automaticamente
+    // funções, undefined e símbolos, produzindo sempre um snapshot válido.
+    // Trade-off aceite: perda de tipos não-JSON (Date→string, Map/Set→{}),
+    // sem impacto nos campos consumidos por getSystemMetrics() (strings/números).
     const _unifedExportQueue = (() => {
         let _current = Promise.resolve();
         return (fn) => (_current = _current.then(
@@ -2577,10 +2581,9 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         return _unifedExportQueue(async () => {
         triadaLog('info', '⚖️ _exportPacoteAdvogado v2 — FILA PROMISE + SNAPSHOT (PATCH P2)');
         try {
-            // Snapshot imutável: protege contra mutação do estado durante exportação
-            const snapshot = (typeof structuredClone === 'function')
-                ? structuredClone(window.UNIFEDSystem)
-                : JSON.parse(JSON.stringify(window.UNIFEDSystem || {}));
+            // Snapshot imutável: protege contra mutação do estado durante exportação.
+            // JSON serialização remove funções (não clonáveis), undefined e símbolos.
+            const snapshot = JSON.parse(JSON.stringify(window.UNIFEDSystem || {}));
             const sessionId = snapshot?.analysis?.sessionId || snapshot?.sessionId || 'DEMO';
 
             const _unifiedPayload = (typeof window.UNIFED_ExportEngine !== 'undefined' &&
