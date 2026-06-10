@@ -38,6 +38,19 @@
 (function _installContrapericiaExport() {
     'use strict';
 
+    // ── PATCH P14 — patch_unifed_macro_v13 (helper i18n partilhado) ─────────
+    // Chama forceTranslateUI() de forma síncrona, se disponível, evitando o
+    // atraso de ~50ms do MutationObserver reactivo (translations.js). Usado
+    // em injectarBotao() (injeção/remoção do botão) e em
+    // exportarPacoteContraperiria() (restauro do texto do botão pós-acção).
+    function _syncTranslate() {
+        if (typeof window.forceTranslateUI === 'function') {
+            window.forceTranslateUI();
+        } else if (window.UNIFED_TRANSLATIONS && typeof window.UNIFED_TRANSLATIONS.forceTranslateUI === 'function') {
+            window.UNIFED_TRANSLATIONS.forceTranslateUI();
+        }
+    }
+
     // ── Constantes de identificação ──────────────────────────────────────────
     const MODULE_VERSION  = 'v1.0-CONTRAPERIRIA';
     const MODULE_ID       = 'UNIFED-PROBATUM-CONTRAPERIRIA';
@@ -448,9 +461,11 @@
             if (btn) {
                 btn.disabled    = false;
                 btn.textContent = '✅ PACOTE GERADO';
+                _syncTranslate();
                 setTimeout(() => {
                     btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-PERÍCIA';
                     btn.disabled    = false;
+                    _syncTranslate();
                 }, 3000);
             }
 
@@ -461,6 +476,7 @@
                 btn.textContent = '❌ ERRO — ' + err.message.substring(0, 40);
                 setTimeout(() => {
                     btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-PERÍCIA';
+                    _syncTranslate();
                 }, 5000);
             }
             alert('[UNIFED] Erro ao gerar pacote: ' + err.message);
@@ -530,11 +546,15 @@
         label.textContent = 'ISO/IEC 27037 · Art. 125.º CPP · 10 artefactos · SHA-256';
         btn.appendChild(label);
 
+        // ── PATCH P14 — patch_unifed_macro_v13 (sincronização i18n) ──────────
+        // _syncTranslate() está definida no escopo do módulo (ver topo do ficheiro).
+
         // ── Tentar inserir após o botão de Pacote Advogado (panel.html) ──────
         const advBtn = document.getElementById('purePacoteAdvogadoBtn');
         if (advBtn && advBtn.parentNode) {
             advBtn.parentNode.insertBefore(btn, advBtn.nextSibling);
             console.log('[CONTRAPERIRIA] ✅ Botão inserido após purePacoteAdvogadoBtn');
+            _syncTranslate();
             return;
         }
 
@@ -543,6 +563,7 @@
         if (triadaRow) {
             triadaRow.appendChild(btn);
             console.log('[CONTRAPERIRIA] ✅ Botão inserido em #triadaContainer');
+            _syncTranslate();
             return;
         }
 
@@ -550,6 +571,7 @@
         document.body.appendChild(btn);
         btn.style.cssText += ';position:fixed;bottom:20px;right:20px;z-index:9999;width:auto';
         console.log('[CONTRAPERIRIA] ⚠ Botão inserido como floating (fallback)');
+        _syncTranslate();
     }
 
     // ── Registar no evento de interface pronta ───────────────────────────────
@@ -563,7 +585,15 @@
     window.addEventListener('UNIFED_ANALYSIS_COMPLETE', () => {
         injectarBotao();
         const btn = document.getElementById('unifed-contraperiria-btn');
-        if (btn) btn.style.display = 'block';
+        if (btn) {
+            btn.style.display = 'block';
+            // PATCH P14 — re-sincronizar tradução após tornar o botão visível
+            if (typeof window.forceTranslateUI === 'function') {
+                window.forceTranslateUI();
+            } else if (window.UNIFED_TRANSLATIONS && typeof window.UNIFED_TRANSLATIONS.forceTranslateUI === 'function') {
+                window.UNIFED_TRANSLATIONS.forceTranslateUI();
+            }
+        }
         console.log('[CONTRAPERIRIA] ✅ Activado após análise completa.');
     });
 

@@ -2503,7 +2503,14 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        // ── PATCH P15 — patch_unifed_macro_v13 (revogação imediata) ─────────
+        // ANTERIOR: setTimeout(revoke, 1000ms) retinha o Blob em memória por
+        // 1s após o download. Em window.testLoadExport (N iterações com 1s
+        // de intervalo), múltiplos Blobs de ZIP (potencialmente >1MB cada)
+        // podiam coexistir em memória simultaneamente.
+        // CORRIGIDO: a.click() dispara o download de forma síncrona; revogar
+        // imediatamente é seguro nos browsers suportados (Chrome/Firefox/Edge).
+        URL.revokeObjectURL(url);
         triadaLog('info', `📥 Download iniciado: ${filename}`);
     }
 

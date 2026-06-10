@@ -2180,6 +2180,17 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                 document.querySelectorAll('#evidenceModal,#logsModal,#hashVerificationModal,#unifed-custom-modal')
                     .forEach(function(m) { m.style.display = 'none'; });
                 window.closeCustodyChainModal();
+                // ── PATCH P15b — patch_unifed_macro_v13 (defensivo) ─────────
+                // Se uma futura iteração reter um Blob "pendente" associado a
+                // um modal de verificação, este ponto liberta-o ao fechar.
+                // Actualmente nenhum fluxo define _unifedLastGeneratedBlobUrl
+                // (ambos os pontos de download em unifed_triada_export.js
+                // revogam o seu próprio Object URL de forma síncrona — Patch P15).
+                if (window._unifedLastGeneratedBlobUrl) {
+                    URL.revokeObjectURL(window._unifedLastGeneratedBlobUrl);
+                    window._unifedLastGeneratedBlobUrl = null;
+                    console.log('[MEMORY-CLEANUP] ✅ Revogado URL do Blob pendente.');
+                }
             };
         });
     </script>
