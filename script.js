@@ -6278,23 +6278,19 @@ function performForensicCrossings() {
     cross.btor = despesas;
     cross.btf  = faturaPlataforma;
 
-    // RETIFICAÇÃO R24-CONSERVADOR: usar calcularDanoConservador() com factor 0.85
-    if (window.calcularDanoConservador && typeof window.calcularDanoConservador === 'function') {
-        const impactoAnualConservador = window.calcularDanoConservador(discrepanciaMensalMedia, 38000);
-        cross.impactoMensalMercado   = impactoAnualConservador / 12;
-        cross.impactoAnualMercado    = impactoAnualConservador;
-        cross.impactoSeteAnosMercado = impactoAnualConservador * 7;
-        console.log('[UNIFED-CONSERVADOR] 📊 Impacto calculado via calcularDanoConservador() (factor 0.85):', impactoAnualConservador.toFixed(2));
-    } else {
-        // Fallback: cálculo directo sem factor conservador (sem calcularDanoConservador disponível)
-        cross.impactoMensalMercado   = discrepanciaMensalMedia * 38000;
-        cross.impactoAnualMercado    = cross.impactoMensalMercado * 12;
-        cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
-        console.warn('[UNIFED-CONSERVADOR] ⚠️ calcularDanoConservador() não disponível — usando cálculo directo.');
-    }
+    // ── PATCH D1 — patch_unifed_macro_v13 (base única mediaMensalOmissao) ────
+    // ANTERIOR (CORROMPIDO): factor 0.85 via calcularDanoConservador() produzia
+    // impactoSeteAnosMercado = 1.449.248.997 € (sub-estimação de 15%).
+    // CORRIGIDO: cálculo directo sem factor conservador, alinhado com Patch C
+    // (unifed_triada_export.js). Base única: discrepanciaMensalMedia.
+    // Checksum: 534,1475 × 38000 × 12 × 7 = 1.704.998.820,00 €
+    cross.impactoMensalMercado   = discrepanciaMensalMedia * 38000;
+    cross.impactoAnualMercado    = cross.impactoMensalMercado * 12;
+    cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
+    // ─────────────────────────────────────────────────────────────────────────
 
     cross.discrepancia5IMT     = cross.discrepanciaSaftVsDac7 * 0.05;
-    cross.agravamentoBrutoIRC  = (cross.discrepancia / mesesDados) * 12;
+    cross.agravamentoBrutoIRC  = discrepanciaMensalMedia * 12;
     cross.ircEstimado          = cross.agravamentoBrutoIRC * 0.21;
     cross.bigDataAlertActive   = Math.abs(cross.discrepanciaCritica) > 0.01;
 
@@ -8863,10 +8859,11 @@ window._syncPureDashboard = (function() {
             const macroMeses = (system.dataMonths && system.dataMonths.size > 0)
                 ? system.dataMonths.size : 1;
             const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
-            // [UNIFED-SCR-001] Factor conservador 0.85 aplicado para alinhar com
-            // calcularDanoConservador() (Cálculo Tributário Pericial).
-            // Garante métrica única e irrefutável em toda a interface.
-            const macroMensal   = (macroMedia * 38000) * 0.85;
+            // ── PATCH D2 — patch_unifed_macro_v13 (remover factor 0.85 da UI) ──
+            // ANTERIOR (CORROMPIDO): factor 0.85 produzia 1.449.248.997 € no painel.
+            // CORRIGIDO: cálculo directo alinhado com Patch C e Patch D1.
+            // Checksum: 534,1475 × 38000 × 12 × 7 = 1.704.998.820,00 €
+            const macroMensal   = macroMedia * 38000;
             const macroAnual    = macroMensal * 12;
             const macro7Anos    = macroAnual * 7;
             const fmtMacro = window.formatForensicCurrency || fmt;
