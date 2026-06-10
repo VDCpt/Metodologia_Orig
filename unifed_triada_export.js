@@ -640,8 +640,16 @@
             sessionValue = 'ERRO_SESSAO';
         }
 
-        const discrepanciaAnual = (analysis.saftGross || 0) - (analysis.dac7Total || 0);
-        const impactoSeteAnosMercado = discrepanciaAnual * 38000 * 7;
+        // ── PATCH macro_v13 — Lacuna A (getSystemMetrics) ────────────────────
+        // ANTERIOR (CORROMPIDO): utilizava discrepância SAF-T vs DAC7 (472,81 €)
+        // como base, ignorava o multiplicador de 12 meses e não extraía média mensal.
+        // CORRIGIDO: base = omissão de custos (BTOR – BTF); extrai média mensal
+        // antes de aplicar o multiplicador de mercado (38.000) e a projeção (12×7).
+        const mesesComDados = sys.dataMonths ? sys.dataMonths.length : 4;
+        const baseOmissaoCustos = ((analysis.totals && analysis.totals.despesas) || analysis.btorLedger || 0)
+            - ((analysis.totals && analysis.totals.faturaPlataforma) || analysis.btfInvoice || 0);
+        const mediaMensalBase = mesesComDados > 0 ? (baseOmissaoCustos / mesesComDados) : 0;
+        const impactoSeteAnosMercado = mediaMensalBase * 38000 * 12 * 7;
 
         let custodyLogs = analysis.custodyLog || [];
         if (window.ForensicLogger && typeof window.ForensicLogger.getLogs === 'function') {
@@ -1567,9 +1575,16 @@
         const impactoAnualOmissaoCustos = omissaoCustos * 12;           // 26.219,40 €
         const ircEstimado = impactoAnualOmissaoCustos * 0.21;           // 5.506,07 €
         const contribuicaoIMT = omissaoReceita * 0.05;                  // 23,64 €
-        const impactoMensal38k = omissaoCustos * 38000;                 // 20.757.025 €
-        const impactoAnual38k = impactoMensal38k * 12;                  // 249.084.300 €
-        const impacto7Anos = impactoAnual38k * 7;                       // 1.743.598.080 €
+        // ── PATCH macro_v13 — Lacuna B (_gerarBlobParecerTecnicoForense) ──────
+        // ANTERIOR (CORROMPIDO): omissaoCustos (valor acumulado de 4 meses = 2.136,59 €)
+        // era multiplicado diretamente por 38.000, sobrestimando em 400%.
+        // CORRIGIDO: extrai média mensal antes de aplicar o multiplicador de mercado.
+        // Checksum esperado: (2136.59 / 4) * 38000 * 12 * 7 = 1.704.998.820,00 €
+        const mesesPeriodo = m.dataMonths ? m.dataMonths.length : 4;
+        const mediaMensalOmissao = mesesPeriodo > 0 ? (omissaoCustos / mesesPeriodo) : 0;
+        const impactoMensal38k = mediaMensalOmissao * 38000;
+        const impactoAnual38k = impactoMensal38k * 12;
+        const impacto7Anos = impactoAnual38k * 7;
 
         // Datas e timestamps
         const now = new Date();
