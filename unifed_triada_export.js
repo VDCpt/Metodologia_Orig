@@ -1572,19 +1572,26 @@
         const iva23 = m.ivaFalta23;                                     // 502,54 €
         const iva6  = m.ivaFalta6;                                      // 131,10 €
         const asfixiaFinanceira = m.saftGross * 0.06;                   // 493,68 € aprox.
-        const impactoAnualOmissaoCustos = omissaoCustos * 12;           // 26.219,40 €
-        const ircEstimado = impactoAnualOmissaoCustos * 0.21;           // 5.506,07 €
         const contribuicaoIMT = omissaoReceita * 0.05;                  // 23,64 €
-        // ── PATCH macro_v13 — Lacuna B (_gerarBlobParecerTecnicoForense) ──────
-        // ANTERIOR (CORROMPIDO): omissaoCustos (valor acumulado de 4 meses = 2.136,59 €)
-        // era multiplicado diretamente por 38.000, sobrestimando em 400%.
-        // CORRIGIDO: extrai média mensal antes de aplicar o multiplicador de mercado.
-        // Checksum esperado: (2136.59 / 4) * 38000 * 12 * 7 = 1.704.998.820,00 €
-        const mesesPeriodo = m.dataMonths ? m.dataMonths.length : 4;
+
+        // ── PATCH C — patch_unifed_macro_v13 (bloco atómico unificado) ────────
+        // Consolida projeções micro e macroeconómicas numa base única derivada
+        // de mediaMensalOmissao, garantindo coerência interna da tabela fiscal.
+        // Checksum: (2136.59 / 4) * 38000 * 12 * 7 = 1.704.998.820,00 €
+        //
+        // EXTRAÇÃO DA MÉDIA MENSAL (BASE UNIFICADA)
+        const mesesPeriodo       = m.dataMonths ? m.dataMonths.length : 4;
         const mediaMensalOmissao = mesesPeriodo > 0 ? (omissaoCustos / mesesPeriodo) : 0;
+
+        // PROJEÇÃO MICROECONÓMICA (SUJEITO PASSIVO)
+        const impactoAnualOmissaoCustos = mediaMensalOmissao * 12;
+        const ircEstimado               = impactoAnualOmissaoCustos * 0.21;
+
+        // PROJEÇÃO MACROECONÓMICA (MERCADO)
         const impactoMensal38k = mediaMensalOmissao * 38000;
-        const impactoAnual38k = impactoMensal38k * 12;
-        const impacto7Anos = impactoAnual38k * 7;
+        const impactoAnual38k  = impactoMensal38k * 12;
+        const impacto7Anos     = impactoAnual38k  * 7;
+        // ─────────────────────────────────────────────────────────────────────
 
         // Datas e timestamps
         const now = new Date();
