@@ -350,6 +350,13 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
 <script src="enrichment.js"></script>
 <script src="nexus.js"></script>
 <script src="unifed_architecture_report.js"></script>
+<!-- ── MÓDULO DE CONTRA-PERÍCIA (patch_unifed_macro_v13) ──────────────────────
+     Exporta pacote ZIP com 10 artefactos forenses para verificação independente.
+     Depende de: JSZip (linha 72), WebCrypto, UNIFEDSystem, UNIFED_FORENSIC_LOG.
+     Normas: ISO/IEC 27037:2012 · Art. 125.º CPP · D.L. n.º 28/2019
+     Inserido APÓS script.js e nexus.js para garantir acesso ao estado global.
+─────────────────────────────────────────────────────────────────────────────── -->
+<script src="unifed_contraperiria_export.js"></script>
 
     <script>
         (function() {
