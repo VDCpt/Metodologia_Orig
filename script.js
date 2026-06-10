@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 if (!window.UNIFEDSystem) {
     window.UNIFEDSystem = {
         config: {
-            version: 'v1.0-COMMERCIAL-LITIGATION',
+            version: (window.UNIFED_VERSION && window.UNIFED_VERSION.full) || 'v1.0-COMMERCIAL-LITIGATION',
             timestamp: new Date().toISOString(),
             language: 'pt'
         },
@@ -5912,13 +5912,14 @@ async function performAudit() {
         })();
 
 // PERF-03: Sincronizações DOM adiadas 50 ms — não bloqueiam o event loop dos cálculos finais
-setTimeout(() => {
+// PATCH P1 (cont.) — callback convertida para async para suportar await na linha seguinte.
+setTimeout(async () => {
 if (typeof window._syncPureDashboard === 'function') {
-    // ── RECTIFICAÇÃO D-03 ────────────────────────────────────────────────────
-    // Argumento `system` era omitido → performSync() recebia undefined →
-    // retornava antes de iterar o mapping → syncCount sempre 0.
-    // ── FIM RECTIFICAÇÃO D-03 ────────────────────────────────────────────────
-    const syncResult = window._syncPureDashboard(window.UNIFEDSystem);
+    // ── PATCH P1 — patch_unifed_macro_v13 ────────────────────────────────────
+    // _syncPureDashboard agora é async com throttle interno; await garante que
+    // o masterHash está resolvido antes de qualquer renderização subsequente.
+    // ── FIM PATCH P1 ─────────────────────────────────────────────────────────
+    const syncResult = await window._syncPureDashboard(window.UNIFEDSystem);
     const syncCount = syncResult !== undefined ? syncResult : 1;
     console.log(`[UNIFED-SYNC] 🔬 Painel Puro sincronizado.`);
     // ── RECTIFICAÇÃO R24-PASSO1 ──────────────────────────────────────────────
@@ -8078,7 +8079,7 @@ window.translateDataLangElements = translateDataLangElements;
         return;
     }
 
-    UNIFEDSystem._pureModuleVersion = 'v1.0-COMMERCIAL-LITIGATION';
+    UNIFEDSystem._pureModuleVersion = (window.UNIFED_VERSION && window.UNIFED_VERSION.full) || 'v1.0-COMMERCIAL-LITIGATION';
     UNIFEDSystem._pureModuleLoaded  = false;
 
     if (typeof UNIFEDSystem.loadAnonymizedRealCase !== 'function') {
@@ -8616,7 +8617,7 @@ function getSystemMetadata() {
     return {
         version: UNIFEDSystem.version,
         name: 'UNIFED - PROBATUM',
-        build: 'v1.0-COMMERCIAL-LITIGATION',
+        build: (window.UNIFED_VERSION && window.UNIFED_VERSION.full) || 'v1.0-COMMERCIAL-LITIGATION',
         releaseDate: '2025-03-15',
         compliance: [
             'ISO/IEC 27037:2012',
@@ -8749,13 +8750,27 @@ window.resetEvidenceOnly = resetEvidenceOnly;
 
 window._isSyncing = window._isSyncing || false;
 
+// ── PATCH P1 — patch_unifed_macro_v13 (definição _syncPureDashboard) ────
+// ANTERIOR: função síncrona, sem throttle temporal, lia masterHash sem
+// garantir que generateMasterHash() assíncrono já tinha resolvido.
+// CORRIGIDO: função async, throttle de 100ms entre sincronizações,
+// e await explícito de generateMasterHash() quando masterHash ausente.
 window._syncPureDashboard = (function() {
     let syncInProgress = false;
-    return function(system) {
+    let lastSyncTime = 0;
+    return async function(system) {
         if (syncInProgress) return 0;
+        const _now = Date.now();
+        if (_now - lastSyncTime < 100) return 0; // throttle
         syncInProgress = true;
+        lastSyncTime = _now;
         try {
             if (!system || !system.analysis) return 0;
+            // Aguardar masterHash se ainda estiver pendente (assíncrono)
+            if (!system.masterHash && typeof generateMasterHash === 'function') {
+                try { await generateMasterHash(); }
+                catch (_eMH) { console.warn('[SYNC] generateMasterHash() falhou:', _eMH.message); }
+            }
             const totals = system.analysis.totals || {};
             const cross = system.analysis.crossings || {};
             const lang = window.currentLang || 'pt';

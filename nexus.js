@@ -301,9 +301,24 @@
         };
     }
 
-    // FALHA 9 — R24: flag NEXUS_AIRGAP — quando false, permite api.anthropic.com
-    // Definir window.NEXUS_AIRGAP = false em consola para activar narrativa IA em produção
-    if (typeof window.NEXUS_AIRGAP === 'undefined') { window.NEXUS_AIRGAP = true; }
+    // ── PATCH P4 — patch_unifed_macro_v13 (NEXUS_AIRGAP configurável) ───
+    // ANTERIOR: airgap sempre true, bloqueando freetsa.org em produção.
+    // CORRIGIDO: configurável via query string ?airgap=false ou variável
+    // de ambiente. DEMO mantém sempre true por segurança.
+    (function() {
+        if (window.UNIFED_CONFIG && window.UNIFED_CONFIG.modo === 'DEMO') {
+            window.NEXUS_AIRGAP = true;
+        } else {
+            try {
+                const _urlParams = new URLSearchParams(window.location.search);
+                const _airgapParam = _urlParams.get('airgap');
+                window.NEXUS_AIRGAP = (_airgapParam === 'false') ? false : true;
+            } catch (_e) {
+                window.NEXUS_AIRGAP = true; // fallback seguro
+            }
+        }
+        console.log('[NEXUS·AIRGAP] modo:', window.NEXUS_AIRGAP ? 'ISOLADO' : 'REDE ACTIVA');
+    })();
 
     // Interceptor global fetch — substitui completamente o comportamento para URLs externas
     var _origFetch = window.fetch.bind(window); // Vinculação estrita ao escopo global

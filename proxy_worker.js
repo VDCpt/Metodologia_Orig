@@ -54,10 +54,18 @@ const CONFIG = {
     REQUIRED_HEADERS: ['content-type'],
     
     // Whitelist de origens (conformidade ISO/IEC 27037 · D.L. 28/2019)
+    // ── PATCH P12 — patch_unifed_macro_v13 ──────────────────────────────────
+    // Adicionadas origens de desenvolvimento local para permitir testes do
+    // dashboard UNIFED-PROBATUM em localhost antes do deploy de produção.
+    // ATENÇÃO: remover as 3 entradas localhost/127.0.0.1 antes de deploy final
+    // em produção (wrangler deploy --env production).
     ALLOWED_ORIGINS: [
         'https://app.unifed.com',
         'https://unifed.com',
-        'https://api.unifed.com'
+        'https://api.unifed.com',
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500'
     ]
 };
 

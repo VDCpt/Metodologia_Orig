@@ -217,7 +217,11 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     'smoking_gun_1':    { 'pt': '🔫 PROVA RAINHA I: Retenção Ilícita de Comissões', 'en': '🔫 SMOKING GUN I: Illegal Commission Withholding' },
     'smoking_gun_2':    { 'pt': '🔫 PROVA RAINHA II: Omissão de Faturação (Subdeclaração)', 'en': '🔫 SMOKING GUN II: Invoicing Omission (Underreporting)' },
     'white_collar_crime': { 'pt': 'CRIMINALIDADE DE COLARINHO BRANCO', 'en': 'WHITE‑COLLAR CRIME' },
-    'expense_gap_label':  { 'pt': 'OMISSÃO DE CUSTOS/IVA', 'en': 'COST/VAT OMISSION' }
+    'expense_gap_label':  { 'pt': 'OMISSÃO DE CUSTOS/IVA', 'en': 'COST/VAT OMISSION' },
+    // ── PATCH P9 — patch_unifed_macro_v13 ──────────────────────────────────
+    // showTwoAxisAlerts() em script.js acede a t.expenseGapLabel (camelCase),
+    // mas o dicionário só tinha 'expense_gap_label' (snake_case) → undefined.
+    'expenseGapLabel': { 'pt': 'OMISSÃO DE CUSTOS/IVA', 'en': 'COST/VAT OMISSION' }
 };
 
 // ============================================================================

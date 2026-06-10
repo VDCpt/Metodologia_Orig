@@ -662,9 +662,26 @@ window.addEventListener('UNIFED_ANALYSIS_COMPLETE', async function() {
     }
 });
 
+// ── PATCH P3 — patch_unifed_macro_v13 (auto-selagem antes de validar) ──
+// ANTERIOR: validateChain() falhava se o utilizador exportasse antes de
+// performAudit(), porque a cadeia nunca tinha sido selada.
+// CORRIGIDO: selar automaticamente se necessário antes de validar.
 window.UNIFED_validateBeforeExport = async function(exportLabel) {
     if (!window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody) return true;
     const chain = window.UNIFED_FORENSIC_SYSTEM.chainOfCustody;
+    // Auto-selagem: se a cadeia não está selada, selar agora
+    if (!chain.sealed) {
+        console.warn(`[HMAC·GATE] ${exportLabel}: cadeia não selada. A selar agora...`);
+        try {
+            if (typeof chain.seal === 'function') {
+                await chain.seal();
+            } else if (typeof chain.calculateMasterHash === 'function') {
+                await chain.calculateMasterHash();
+            }
+        } catch (sealErr) {
+            console.error('[HMAC·GATE] Falha na selagem automática:', sealErr.message);
+        }
+    }
     const result = await chain.validateChain();
     if (result === '✅ CADEIA ÍNTEGRA' || result === '⚠️ CADEIA NÃO SELADA') {
         console.log(`[HMAC·GATE] ✅ ${exportLabel}: ${result}`);

@@ -1633,9 +1633,18 @@
 
 /* ========================================================================
    RETIFICAÇÃO CIRÚRGICA – TAMANHO DE FONTE PARA BOTÕES (ECRÃ)
+   PATCH P8 — patch_unifed_macro_v13: !important removido; substituído por
+   especificidade reforçada (body .pure-btn-led) + media query para tablets,
+   restaurando a cascata e permitindo overrides responsivos legítimos.
    ======================================================================== */
-.pure-btn-led {
-    font-size: 10px !important; /* para ecrã, sem afectar PDF */
+body .pure-btn-led {
+    font-size: 10px; /* para ecrã, sem afectar PDF */
+}
+
+@media (max-width: 768px) {
+    body .pure-btn-led {
+        font-size: 8px;
+    }
 }
 
 /* ── RETIFICAÇÃO R24-4: Badge Criminalidade de Colarinho Branco ─────────── */

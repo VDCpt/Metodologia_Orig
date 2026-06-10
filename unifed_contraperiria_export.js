@@ -472,8 +472,17 @@
     // ── Injecção do botão no DOM ──────────────────────────────────────────────
     function injectarBotao() {
 
-        // Evitar duplicação
-        if (document.getElementById('unifed-contraperiria-btn')) return;
+        // ── PATCH P11 — patch_unifed_macro_v13 (guard idempotente) ──────────
+        // ANTERIOR: injectarBotao() podia ser chamado por UNIFED_ANALYSIS_COMPLETE
+        // E por unifed:interfaceShown, criando botões duplicados em condições de
+        // corrida (ambos os eventos disparam antes do primeiro DOM check resolver).
+        // CORRIGIDO: flag global síncrona, verificada antes de qualquer outra lógica.
+        if (window._contrapericiaInjectado) return;
+        if (document.getElementById('unifed-contraperiria-btn')) {
+            window._contrapericiaInjectado = true;
+            return;
+        }
+        window._contrapericiaInjectado = true;
 
         const btn = document.createElement('button');
         btn.id        = 'unifed-contraperiria-btn';

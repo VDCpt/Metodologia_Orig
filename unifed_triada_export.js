@@ -322,16 +322,19 @@
     // MÓDULO 1 — formatForensicCurrency
     // =========================================================================
 
-    function formatForensicCurrency(value) {
-        if (value === undefined || value === null) { return '0,00 €'; }
-        const num = Number(value);
-        if (isNaN(num)) { return '0,00 €'; }
-        const [intPart, decPart] = num.toFixed(2).split('.');
-        const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        return intFormatted + ',' + decPart + ' €';
+    // ── PATCH P2b — formatForensicCurrency idempotente ──────────────────
+    // Não sobrescreve definição global de script.js (fonte única — P13).
+    if (!window.formatForensicCurrency) {
+        window.formatForensicCurrency = function formatForensicCurrency(value) {
+            if (value === undefined || value === null) { return '0,00 €'; }
+            const num = Number(value);
+            if (isNaN(num)) { return '0,00 €'; }
+            const [intPart, decPart] = num.toFixed(2).split('.');
+            const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return intFormatted + ',' + decPart + ' €';
+        };
     }
-
-    window.formatForensicCurrency = formatForensicCurrency;
+    const formatForensicCurrency = window.formatForensicCurrency;
 
     // =========================================================================
     // ================== PATCH INTEGRADO: SESSION RESOLVER ====================
@@ -2558,24 +2561,31 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     // =========================================================================
     // MÓDULO 3B — _exportPacoteAdvogado
     // =========================================================================
-    window._exportPacoteAdvogado = async function () {
-        // [PATCH-UNIFED-03] Guard de concorrência — impede duplo disparo simultâneo.
-        // Race condition confirmada por análise forense: sem guard, cliques duplos ou
-        // disparos de evento paralelos geram dois pacotes ZIP com conteúdos divergentes,
-        // comprometendo a integridade da prova exportada.
-        if (window._isExporting) {
-            triadaLog('warn', '[PATCH-UNIFED-03] ⚠ Exportação já em curso — pedido duplicado bloqueado. ' +
-                'Referência temporal do bloqueio: ' + new Date().toISOString());
-            return;
-        }
-        window._isExporting = true;
-        triadaLog('info', '\u2696\uFE0F _exportPacoteAdvogado v2 — DECOMPOSIÇÃO ATÓMICA DO MASTER (FIX-TRIADA-01)');
+    // ── PATCH P2 — patch_unifed_macro_v13 (fila Promise + structuredClone) ────
+    // ANTERIOR: flag _isExporting permitia race condition em cliques duplos.
+    // CORRIGIDO: exportQueue serializa chamadas; structuredClone garante
+    // snapshot imutável do estado no momento exacto do disparo.
+    const _unifedExportQueue = (() => {
+        let _current = Promise.resolve();
+        return (fn) => (_current = _current.then(
+            () => fn(),
+            (err) => { console.error('[EXPORT-QUEUE]', err); return fn(); }
+        ));
+    })();
+
+    window._exportPacoteAdvogado = function () {
+        return _unifedExportQueue(async () => {
+        triadaLog('info', '⚖️ _exportPacoteAdvogado v2 — FILA PROMISE + SNAPSHOT (PATCH P2)');
         try {
-            const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || 'DEMO';
+            // Snapshot imutável: protege contra mutação do estado durante exportação
+            const snapshot = (typeof structuredClone === 'function')
+                ? structuredClone(window.UNIFEDSystem)
+                : JSON.parse(JSON.stringify(window.UNIFEDSystem || {}));
+            const sessionId = snapshot?.analysis?.sessionId || snapshot?.sessionId || 'DEMO';
 
             const _unifiedPayload = (typeof window.UNIFED_ExportEngine !== 'undefined' &&
                 typeof window.UNIFED_ExportEngine.getVerifiedPayload === 'function')
-                ? window.UNIFED_ExportEngine.getVerifiedPayload()
+                ? window.UNIFED_ExportEngine.getVerifiedPayload(snapshot.analysis)
                 : null;
             window.UNIFED_ACTIVE_EXPORT_PAYLOAD = _unifiedPayload;
 
@@ -2657,9 +2667,13 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             triadaLog('error', '❌ Falha em _exportPacoteAdvogado: ' + e.message, { stack: e.stack });
             showModalMessage("Erro", "Erro ao gerar Pacote Advogado: " + e.message, null);
         } finally {
-            // [PATCH-UNIFED-03] Libertação do guard — garantida mesmo em caso de excepção.
+            // ── PATCH P2 (cont.) ──────────────────────────────────────────
+            // window._isExporting removido: a serialização é agora garantida
+            // pela fila _unifedExportQueue (ver topo da função). Mantido por
+            // compatibilidade defensiva com código legado que possa lê-lo.
             window._isExporting = false;
         }
+        }); // fim _unifedExportQueue (PATCH P2)
     };
 
     // =========================================================================
