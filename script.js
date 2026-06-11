@@ -2735,7 +2735,7 @@ const translations = {
         closeLogsBtn: "FECHAR",
         wipeBtnText: "PURGA TOTAL DE DADOS (LIMPEZA BINÁRIA)",
         clearConsoleBtn: "LIMPAR CONSOLE",
-        revenueGapTitle: "OMISSÃO DE FATURAÇÃO",
+        revenueGapTitle: "GAP SAF-T vs GANHOS",
         expenseGapTitle: "OMISSÃO DE CUSTOS/IVA",
         expenseGapLabel: "OMISSÃO DE CUSTOS/IVA",  // R24: chave para showTwoAxisAlerts
         revenueGapDesc: "SAF-T Bruto vs Ganhos",
@@ -2866,7 +2866,7 @@ const translations = {
         closeLogsBtn: "CLOSE",
         wipeBtnText: "TOTAL DATA PURGE (BINARY CLEANUP)",
         clearConsoleBtn: "CLEAR CONSOLE",
-        revenueGapTitle: "REVENUE OMISSION",
+        revenueGapTitle: "SAF-T vs EARNINGS GAP",
         expenseGapTitle: "COST/VAT OMISSION",
         expenseGapLabel: "COST/VAT OMISSION",  // R24: chave para showTwoAxisAlerts
         revenueGapDesc: "SAF-T Gross vs Earnings",
@@ -2888,7 +2888,7 @@ const translations = {
 const _t = (key) => {
     const dict = {
         'expenseGapLabel': { pt: 'OMISSÃO DE CUSTOS/IVA', en: 'COST/VAT OMISSION' },
-        'revenueGapLabel': { pt: 'OMISSÃO DE FATURAÇÃO', en: 'REVENUE OMISSION' },
+        'revenueGapLabel': { pt: 'GAP SAF-T vs GANHOS', en: 'SAF-T vs EARNINGS GAP' },
         'discrepancyLabel': { pt: 'DISCREPÂNCIA', en: 'DISCREPANCY' },
         'highRisk': { pt: 'RISCO ELEVADO', en: 'HIGH RISK' },
         'sectionI': { pt: 'I. ANÁLISE PERICIAL', en: 'I. EXPERT ANALYSIS' },
@@ -7232,6 +7232,22 @@ function _updateAuxiliaryBoxes() {
     setBox('pure-zona-total',         aux.totalNaoSujeitos);
     setBox('pure-nc-cancelamentos',   aux.cancelamentos);
 
+    // ── PATCH P24 — patch_unifed_macro_v13 (Item 5 / pure-zc-amount=0,00€) ──
+    // ANTERIOR: #pure-zc-amount só era escrito por executarRetificacoesFinaisUnifed(),
+    // chamada no DOMContentLoaded (aux.totalNaoSujeitos=0 nesse momento) e NUNCA
+    // MAIS no fluxo "Demo" (que chama _updateAuxiliaryBoxes() — esta função —
+    // mas não executarRetificacoesFinaisUnifed() de novo). Resultado: o texto
+    // introdutório da Zona Cinzenta ficava preso em "0,00 €" mesmo com
+    // aux.totalNaoSujeitos=451.15 correctamente calculado e exibido em
+    // pure-zona-total/pure-zona-campanhas/etc.
+    // CORRIGIDO: esta função (chamada pelo fluxo Demo, linha ~5501, com o
+    // valor já correcto) actualiza também pure-zc-amount.
+    setBox('pure-zc-amount', aux.totalNaoSujeitos);
+    {
+        const _zcEl = document.getElementById('pure-zc-amount');
+        if (_zcEl) _zcEl.setAttribute('data-i18n-ignore', 'true');
+    }
+
     const anoFiscal = UNIFEDSystem.selectedYear || new Date().getFullYear();
     const labelEl   = document.getElementById('auxBoxPortagensLabel');
     const descEl    = document.getElementById('auxBoxPortagensDesc');
@@ -9096,7 +9112,16 @@ window._syncPureDashboard = (function() {
 
             // Master hash consolidado
             const masterHash = system.masterHash || window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash || 'GERACAO_PENDENTE';
-            document.querySelectorAll('.master-hash-value, .hash-value, #pure-hash-prefix, #pure-hash-prefix-verdict').forEach(el => {
+            // ── PATCH P23 — patch_unifed_macro_v13 (Item 4 / split-hash residual) ──
+            // ANTERIOR: #pure-dynamic-hash-section-v (card "VEREDICTO PERICIAL" /
+            // Secção V do painel Diamond) só era actualizado por
+            // generateMasterHash() — se essa função retornasse cedo via guard
+            // RR-01 (_masterHashFrozen de sessão anterior) ANTES da escrita no
+            // DOM, o elemento ficava com hash residual (ex. AFDFFEBC...),
+            // divergente do rodapé (#pure-hash-prefix-verdict, sincronizado por
+            // _syncPureDashboard a cada ciclo, com throttle de 100ms — P1).
+            // CORRIGIDO: incluído no mesmo selector de sincronização contínua.
+            document.querySelectorAll('.master-hash-value, .hash-value, #pure-hash-prefix, #pure-hash-prefix-verdict, #pure-dynamic-hash-section-v, #masterHashValue').forEach(el => {
                 if(el && el.textContent !== masterHash) {
                     el.setAttribute('data-i18n-ignore','true');
                     el.textContent = masterHash;
@@ -10368,6 +10393,40 @@ console.log('[UNIFED-RETIFICACOES] \u2705 Bloco de Retifica\u00e7\u00f5es Cir\u0
         if (window.currentMainChart)        { try { window.currentMainChart.destroy();        } catch(e) {} window.currentMainChart        = null; }
         if (window.currentDiscrepancyChart) { try { window.currentDiscrepancyChart.destroy(); } catch(e) {} window.currentDiscrepancyChart = null; }
 
+        // ── PATCH P26 — patch_unifed_macro_v13 (FASE 2.A) ───────────────────
+        // ANTERIOR: localStorage.removeItem(key) directo.
+        // ADICIONADO: sobrescrita com entropia alta antes de remover
+        // (defesa-em-profundidade contra inspecção do localStorage via
+        // DevTools/extensões DEPOIS da purga, caso o removeItem falhe
+        // silenciosamente nalgum browser).
+        //
+        // NOTA DE CONTRA-PERÍCIA — LIMITES TÉCNICOS REAIS (não omitir):
+        // Esta técnica NÃO garante protecção contra "RAM scraping". Strings
+        // JavaScript são imutáveis: localStorage.setItem(key, novoValor) cria
+        // um NOVO objecto string; o valor ANTERIOR permanece alocado em
+        // memória até o garbage collector o recolher, em momento não
+        // determinístico e não controlável a partir de JS de browser. Não
+        // existe, em JavaScript de browser sandboxed, mecanismo para apagar
+        // de forma determinística memória já alocada (ao contrário de
+        // crypto-shredding real, que opera sobre chaves de cifra, não sobre
+        // o localStorage). Esta medida reduz a janela de exposição em
+        // localStorage (storage em disco/IndexedDB-backed), mas não substitui
+        // — nem cumpre sozinha — uma garantia de "anti-RAM-scraping".
+        try {
+            const _shred = () => Array.from(crypto.getRandomValues(new Uint8Array(256))).join('');
+            ['ifde_client_data_v12_8',
+             (window.ForensicLogger && window.ForensicLogger.STORAGE_KEY) || null,
+             'UNIFED_SESSION', 'UNIFED_CHAIN'
+            ].forEach(key => {
+                if (key && localStorage.getItem(key) !== null) {
+                    localStorage.setItem(key, _shred());
+                    localStorage.setItem(key, _shred());
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch (shredErr) {
+            console.error('[UNIFED-PURGE] Erro na sobrescrita prévia do localStorage:', shredErr);
+        }
         // ── FASE 3: Limpeza de localStorage ──
         try {
             localStorage.removeItem('ifde_client_data_v12_8');

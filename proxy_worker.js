@@ -277,8 +277,26 @@ async function handleRequest(request, env) {
         });
     }
 
-    // Validação do header Authorization (Bearer token)
-    if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
+    // ── PATCH P25 — patch_unifed_macro_v13 (FASE 1.B / Timing Attack) ───────
+    // ANTERIOR: authHeader !== `Bearer ${expectedToken}` usa comparação de
+    // strings padrão, que retorna na primeira diferença de byte — permite,
+    // em teoria, um ataque de temporização (medir μs de resposta) para
+    // inferir o UNIFED_PROXY_SECRET byte-a-byte.
+    // CORRIGIDO: comparação de tempo constante — percorre sempre o número
+    // total de bytes do token esperado, independentemente de onde ocorre
+    // a primeira diferença.
+    const _encoder = new TextEncoder();
+    const _a = _encoder.encode(authHeader || '');
+    const _b = _encoder.encode(`Bearer ${expectedToken}`);
+    let _isEqual = (_a.length === _b.length);
+    const _cmpLen = Math.max(_a.length, _b.length);
+    for (let i = 0; i < _cmpLen; i++) {
+        const _ai = i < _a.length ? _a[i] : 0;
+        const _bi = i < _b.length ? _b[i] : 0;
+        if (_ai !== _bi) _isEqual = false; // não retorna cedo — avalia todos os bytes
+    }
+
+    if (!authHeader || !_isEqual) {
         return new Response(JSON.stringify({
             error:  'Acesso Negado',
             detail: 'Token de autorização forense inválido ou ausente.',

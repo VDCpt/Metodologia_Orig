@@ -213,6 +213,17 @@ window.UNIFED_CONFIG = Object.freeze({
 });
 delete window._tmp;
 console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por token dinâmico de sessão).');
+
+// ── PATCH P22 — patch_unifed_macro_v13 (Item 1) ─────────────────────────────
+// ANTERIOR: config.js não era carregado em index.html; window.UNIFED_PROXY_URL
+// e window.UNIFED_PROXY_SECRET ficavam undefined, fazendo
+// generateLegalNarrative_RETIFICADO (enrichment.js) chamar fetch(undefined)
+// e gerar erro de consola antes de cair no fallback estático.
+// CORRIGIDO: variáveis definidas inline (mesmo conteúdo de config.js).
+// proxy_worker.js é um Cloudflare Worker — não é carregado no cliente.
+window.UNIFED_PROXY_URL    = 'https://api.unifed.com/claude-proxy';
+window.UNIFED_PROXY_SECRET = ''; // vazio → modo fallback estático (sem crash)
+console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_PROXY_SECRET ? '✅ Token presente' : '⚠ Token ausente — modo fallback estático activo'));
     </script>
     <script>
 /**
@@ -692,7 +703,7 @@ console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por to
                 <!-- ALERTAS DE DOIS EIXOS -->
                 <div class="dashboard-fixed" id="twoAxisAlerts">
                     <div class="stat-card warning" id="revenueGapCard" style="display:none;">
-                        <h4><i class="fas fa-chart-line"></i> <span id="revenueGapTitle">OMISSÃO DE FATURAMENTO</span></h4>
+                        <h4><i class="fas fa-chart-line"></i> <span id="revenueGapTitle" data-pt="GAP SAF-T vs GANHOS" data-en="SAF-T vs EARNINGS GAP">GAP SAF-T vs GANHOS</span></h4>
                         <p id="revenueGapValue">0,00 €</p>
                         <span class="stat-desc" id="revenueGapDesc">SAF-T Bruto vs Ganhos</span>
                     </div>
