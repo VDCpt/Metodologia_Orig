@@ -1165,9 +1165,14 @@ const getRiskVerdict = (delta, gross) => {
         level: { pt: 'RISCO CRÍTICO · INFRAÇÃO DETETADA', en: 'CRITICAL RISK · INFRACTION DETECTED' },
         key: 'critical',
         color: '#ff0000',
+        // ── PATCH P21 — patch_unifed_macro_v13 (mesmo padrão do P18) ──────────
+        // ANTERIOR: "89,26%"/"89.26%" hardcoded na descrição, divergente de
+        // pctFormatted (= cross.percentagemOmissao, 89,04%), já calculado
+        // neste escopo e usado correctamente em "percent" (linha abaixo).
+        // CORRIGIDO: descrição usa pctFormatted via template literal.
         description: {
-            pt: 'Evidência de assimetria de informação de proveitos (DAC7) e omissão grave de faturação de custos (89,26%). A plataforma retém valores sem a devida titulação fiscal, prejudicando o direito à dedução de IVA e inflacionando a base de IRC do contribuinte.',
-            en: 'Evidence of income under-reporting (DAC7) and serious cost invoicing omission (89.26%). The platform retains amounts without proper tax documentation, prejudicing the right to VAT deduction and inflating the taxpayer\'s IRC base.'
+            pt: `Evidência de assimetria de informação de proveitos (DAC7) e omissão grave de faturação de custos (${pctFormatted}). A plataforma retém valores sem a devida titulação fiscal, prejudicando o direito à dedução de IVA e inflacionando a base de IRC do contribuinte.`,
+            en: `Evidence of income under-reporting (DAC7) and serious cost invoicing omission (${pctFormatted}). The platform retains amounts without proper tax documentation, prejudicing the right to VAT deduction and inflating the taxpayer's IRC base.`
         },
         percent: pctFormatted
     };
@@ -8907,12 +8912,15 @@ window._syncPureDashboard = (function() {
                     `A omissão de ${_pctOmissao}% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório.`,
                     `The omission of ${_pctOmissao}% of the commission universe in statements vs invoices suggests deliberate underestimation algorithm, not random error.`);
 
-                // pure-wc-finding-4: percentagem de omissão (mantém o valor "€/mês" original
-                // por insuficiência de informação para recalcular essa métrica específica —
-                // ver nota de contra-perícia no relatório).
+                // ── PATCH P20 — patch_unifed_macro_v13 (Item 2) ───────────────────
+                // ANTERIOR: o valor "€458,84/mês" não tinha fonte verificável em
+                // cross.* (resíduo identificado no relatório, achado #12).
+                // CORRIGIDO: removido o valor fixo; o texto reporta apenas
+                // _pctOmissao (verificado, derivado de cross.percentagemOmissao)
+                // e sinaliza explicitamente o dano mensal como pendente.
                 _setBilingual('pure-wc-finding-4',
-                    `O padrão de omissão sustentado (${_pctOmissao}%) + dano fiscal estimado (€458,84/mês) sustenta análise de irregularidade comercial agravada (Art. 405.º CC).`,
-                    `The sustained omission pattern (${_pctOmissao}%) + estimated fiscal damage (€458.84/month) supports qualified tax fraud analysis (Art. 405 CC).`);
+                    `O padrão de omissão sustentado (${_pctOmissao}%) sustenta análise de irregularidade comercial agravada (Art. 405.º CC). O dano fiscal mensal estimado aguarda verificação pericial complementar.`,
+                    `The sustained omission pattern (${_pctOmissao}%) supports qualified tax fraud analysis (Art. 405 CC). The estimated monthly fiscal damage awaits complementary expert verification.`);
 
                 // pure-wc-rec-text: projeção 7 anos (€1.743.598.080 → impactoSeteAnosMercado real)
                 _setBilingual('pure-wc-rec-text',
