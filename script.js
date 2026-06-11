@@ -6808,7 +6808,21 @@ function showAlerts() {
             <div style="margin-bottom: 1rem;">
                 <strong style="color: var(--accent-primary);">${sectionV}:</strong><br>
                 <span style="color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.7rem;">Master Hash SHA-256:</span><br>
-                <span style="color: var(--accent-secondary); font-family: var(--font-mono); font-size: 0.7rem; word-break: break-all;">${UNIFEDSystem.masterHash || 'Calculating...'}</span><br>
+                <!-- ── PATCH P17 — patch_unifed_macro_v13 (Fix B2 / Item 3) ──────────────
+                     ANTERIOR: este span capturava UNIFEDSystem.masterHash de forma
+                     SÍNCRONA, no momento da geração do parecer — ANTES da finalização
+                     assíncrona do masterHash via chain.calculateMasterHash() (RFC3161/
+                     Merkle). Resultado: este span ficava "congelado" com um hash
+                     PRÉ-FINALIZAÇÃO (ex. C63E2C42...), enquanto o rodapé e o painel
+                     Diamond (#pure-hash-prefix / #pure-hash-prefix-verdict), actualizados
+                     por _syncPureDashboard() DEPOIS da finalização, mostravam o hash
+                     FINAL (ex. DFDFA005...) — split-hash visual.
+                     CORRIGIDO: classe "master-hash-value" adicionada — _syncPureDashboard()
+                     já inclui ".master-hash-value" no seu querySelectorAll de sincronização
+                     (linha ~9008), pelo que este span passa a ser re-sincronizado com o
+                     masterHash FINAL assim que generateMasterHash()/calculateMasterHash()
+                     resolver, eliminando a divergência. -->
+                <span class="master-hash-value" style="color: var(--accent-secondary); font-family: var(--font-mono); font-size: 0.7rem; word-break: break-all;">${UNIFEDSystem.masterHash || 'Calculating...'}</span><br>
                 <span style="color: var(--text-secondary); font-size: 0.7rem;">${UNIFEDSystem.analysis.evidenceIntegrity.length} ${currentLang === 'pt' ? 'evidência(s) processada(s) (clique no QR Code para verificar)' : 'evidence(s) processed (click QR Code to verify)'}</span>
             </div>
             <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
@@ -8848,6 +8862,64 @@ window._syncPureDashboard = (function() {
                     : fmt(cross.ircEstimado || 0);
                 updated++;
             }
+
+            // ── PATCH P18 — patch_unifed_macro_v13 (Fix B3 / Template Text Leak) ──────
+            // ANTERIOR: as descrições narrativas abaixo continham valores AGREGADOS
+            // ANTIGOS, fixados como texto estático em data-pt/data-en (HTML), de
+            // sessões/cálculos anteriores aos Patches A-D:
+            //   · pure-wc-ind1-sub : "(€2.184,95 de €2.447,89)"  [valores fantasma]
+            //   · pure-wc-ind2-sub : "(€2.402,57)"               [valor fantasma]
+            //   · pure-wc-finding-1/4, pure-verdict-pct, pure-wc-ind1-val: "89,26%"
+            //   · pure-wc-rec-text : "€1.743.598.080"  [= valor PRÉ-Patch-B/C corrompido]
+            // CORRIGIDO: estes nós são regenerados a cada sincronização a partir de
+            // cross.discrepanciaCritica, totals.despesas, cross.discrepanciaSaftVsDac7,
+            // cross.percentagemOmissao e cross.impactoSeteAnosMercado — a mesma fonte
+            // única usada pelo PDF (Patches A-D) — eliminando a divergência Dashboard/PDF.
+            (function _fixTemplateTextLeak() {
+                const _pctOmissao = (cross.percentagemOmissao || 0).toFixed(2);
+                const _eurPT = (v) => (v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const _eurEN = (v) => (v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const _impacto7AnosFmt = window.formatForensicCurrency
+                    ? window.formatForensicCurrency(cross.impactoSeteAnosMercado || 0)
+                    : fmt(cross.impactoSeteAnosMercado || 0);
+
+                function _setBilingual(id, ptText, enText) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.setAttribute('data-pt', ptText);
+                    el.setAttribute('data-en', enText);
+                    el.textContent = (window.currentLang === 'en') ? enText : ptText;
+                    updated++;
+                }
+
+                // pure-wc-ind1-sub: "Nível de omissão consistente & documentado (€X de €Y)"
+                _setBilingual('pure-wc-ind1-sub',
+                    `Nível de omissão consistente & documentado (€${_eurPT(cross.discrepanciaCritica)} de €${_eurPT(totals.despesas)})`,
+                    `Omission level consistent & documented (€${_eurEN(cross.discrepanciaCritica)} of €${_eurEN(totals.despesas)})`);
+
+                // pure-wc-ind2-sub: "Diferença entre declaração oficial & reporte AT (€X)"
+                _setBilingual('pure-wc-ind2-sub',
+                    `Diferença entre declaração oficial & reporte AT (€${_eurPT(cross.discrepanciaSaftVsDac7)})`,
+                    `Difference between official declaration & TA report (€${_eurEN(cross.discrepanciaSaftVsDac7)})`);
+
+                // pure-wc-finding-1: percentagem de omissão (89,26% → valor real)
+                _setBilingual('pure-wc-finding-1',
+                    `A omissão de ${_pctOmissao}% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório.`,
+                    `The omission of ${_pctOmissao}% of the commission universe in statements vs invoices suggests deliberate underestimation algorithm, not random error.`);
+
+                // pure-wc-finding-4: percentagem de omissão (mantém o valor "€/mês" original
+                // por insuficiência de informação para recalcular essa métrica específica —
+                // ver nota de contra-perícia no relatório).
+                _setBilingual('pure-wc-finding-4',
+                    `O padrão de omissão sustentado (${_pctOmissao}%) + dano fiscal estimado (€458,84/mês) sustenta análise de irregularidade comercial agravada (Art. 405.º CC).`,
+                    `The sustained omission pattern (${_pctOmissao}%) + estimated fiscal damage (€458.84/month) supports qualified tax fraud analysis (Art. 405 CC).`);
+
+                // pure-wc-rec-text: projeção 7 anos (€1.743.598.080 → impactoSeteAnosMercado real)
+                _setBilingual('pure-wc-rec-text',
+                    `Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (${_impacto7AnosFmt} em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado.`,
+                    `Recommend referral for tax fraud investigation (DCIAP/PGR) based on evidence of structured omission, pattern of systemic underestimation, and documented violation of invoicing standards (Art. 78 CIVA). The scale of damage (${_impacto7AnosFmt}) in 7-year projection justifies application of organized economic crime typology.`);
+            })();
+            // ── FIM PATCH P18 ──────────────────────────────────────────────────────────
             // Actualizar veredicto principal e percentagem
             const verdictEl = document.getElementById('pure-verdict');
             if (verdictEl && system.analysis && system.analysis.verdict) {
@@ -9217,31 +9289,29 @@ console.log('[UNIFED-I18N-INTEGRATION] ✅ Sistema bilíngue integrado com expor
 
 window.formatForensicCurrency = function(value, lang = null) {
     lang = lang || window.currentLang || 'pt';
-    
+
     if (typeof value !== 'number' || isNaN(value)) {
         console.warn('[CURRENCY-FORMAT] ⚠️  Valor inválido:', value);
-        return '0,00';
+        return '0,00 €';
     }
-    
+
+    // ── PATCH P16 — patch_unifed_macro_v13 (Fix A1 / Item 4) ────────────────
+    // ANTERIOR: lang === 'en' → currency: 'USD'. Convertia €1.704.998.820,00
+    // em $1.704.998.820,00 pela mera troca do símbolo monetário, alterando
+    // a UNIDADE da prova pericial (EUR → USD) sem qualquer câmbio real.
+    // CORRIGIDO: a moeda do processo é SEMPRE EUR (jurisdição PT). Apenas a
+    // convenção de agrupamento/decimais (locale) varia com o idioma da UI;
+    // o símbolo "€" e o valor numérico permanecem idênticos em PT e EN.
     try {
-        if (lang === 'en') {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value);
-        } else {
-            return new Intl.NumberFormat('pt-PT', {
-                style: 'currency',
-                currency: 'EUR',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value);
-        }
+        return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'pt-PT', {
+            style: 'currency',
+            currency: 'EUR',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
     } catch (error) {
         console.error('[CURRENCY-FORMAT] ❌ Erro ao formatar:', error);
-        return value.toFixed(2);
+        return value.toFixed(2) + ' €';
     }
 };
 
