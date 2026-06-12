@@ -175,7 +175,7 @@ function validateJSONStructure(body) {
  *   · cookie            : estado de sessão persistente
  *
  * Estes headers NÃO são encaminhados para api.anthropic.com, impedindo
- * correlação entre o perfil do utilizador e o conteúdo da consultoria técnica.
+ * correlação entre o perfil do utilizador e o conteúdo da perícia.
  * O IP do cliente é preservado APENAS no contexto de rate limiting (KV Store)
  * e NUNCA transmitido ao serviço upstream.
  */
@@ -336,6 +336,114 @@ export default {
             if (_tokenCheck !== null) { return _tokenCheck; }
         }
         // ─────────────────────────────────────────────────────────────────────
+
+
+        // ── CIRURGIA 4 (patch_unifed_macro_v13 — P13): ROTA /tsa ─────────────
+        // PROBLEMA: o script.js chamava https://api.unifed.com/claude-proxy/tsa
+        // mas este endpoint não existia — o worker encaminhava o payload TSA
+        // directamente para api.anthropic.com/v1/messages, obtendo um erro 400
+        // sem qualquer alerta visível ao utilizador (fallback Nível 1 activava
+        // silenciosamente, sem que o perito soubesse).
+        //
+        // SOLUÇÃO: intercepção por pathname antes do pipeline LLM. Em modo DEMO
+        // (campo { demo: true } no body), retorna um token simulado localmente —
+        // zero tráfego de rede para a TSA externa. Em modo produção, contacta
+        // freetsa.org servidor-a-servidor (elimina CORS do browser).
+        //
+        // Conformidade: RFC 3161 · eIDAS 910/2014 · ISO/IEC 27037:2012.
+        // ─────────────────────────────────────────────────────────────────────
+        const _reqUrl = new URL(request.url);
+        if (_reqUrl.pathname === '/claude-proxy/tsa' || _reqUrl.pathname === '/tsa') {
+            if (request.method === 'OPTIONS') {
+                return new Response(null, {
+                    status: 204,
+                    headers: { ..._corsHeaders(request), ...generateForensicHeaders(requestId) }
+                });
+            }
+            if (request.method !== 'POST') {
+                return new Response(JSON.stringify({ error: 'Method Not Allowed na rota /tsa' }), {
+                    status: 405,
+                    headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                               ...generateForensicHeaders(requestId) }
+                });
+            }
+            let _tsaBody;
+            try { _tsaBody = await request.json(); }
+            catch (_e) {
+                return new Response(JSON.stringify({ error: 'Payload TSA inválido — JSON malformado.' }), {
+                    status: 400,
+                    headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                               ...generateForensicHeaders(requestId) }
+                });
+            }
+            const _hashToSeal = _tsaBody.hash;
+            if (!_hashToSeal || typeof _hashToSeal !== 'string' || _hashToSeal.length !== 64) {
+                return new Response(JSON.stringify({
+                    error: 'Campo "hash" obrigatório: SHA-256 hexadecimal de 64 caracteres.'
+                }), {
+                    status: 400,
+                    headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                               ...generateForensicHeaders(requestId) }
+                });
+            }
+            // Modo DEMO — token simulado, sem tráfego de rede externo
+            if (_tsaBody.demo === true) {
+                const _demoToken = 'UNIFED-DEMO-TSA-' + Date.now().toString(36).toUpperCase();
+                return new Response(JSON.stringify({
+                    status:       'DEMO_SEAL',
+                    serialNumber: _demoToken,
+                    timestamp:    new Date().toISOString(),
+                    authority:    'UNIFED-DEMO-NODE (sem validade eIDAS)',
+                    hash:         _hashToSeal,
+                    note:         'Token de demonstração. Para validade eIDAS: activar endpoint de produção.'
+                }), {
+                    status: 200,
+                    headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                               ...generateForensicHeaders(requestId) }
+                });
+            }
+            // Produção — contactar FreeTSA.org servidor-a-servidor (sem CORS de browser)
+            // NOTA DE PRODUÇÃO: substituir por autoridade acreditada eIDAS 2.0 da
+            // Trusted List ANS/CNCS antes de deploy em contexto judicial.
+            try {
+                const _freetsa = await fetch('https://freetsa.org/tsr', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/octet-stream' },
+                    body:    _hashToSeal,
+                    signal:  AbortSignal.timeout(10000)
+                });
+                if (!_freetsa.ok) { throw new Error('FreeTSA HTTP ' + _freetsa.status); }
+                const _tsrBuffer = await _freetsa.arrayBuffer();
+                return new Response(JSON.stringify({
+                    status:       'RFC3161_SEALED',
+                    serialNumber: requestId,
+                    timestamp:    new Date().toISOString(),
+                    authority:    'FreeTSA.org — RFC 3161',
+                    hash:         _hashToSeal,
+                    tsrSizeBytes: _tsrBuffer.byteLength,
+                    note:         'TSR obtido. Para validade eIDAS plena: substituir por autoridade da Trusted List ANS/CNCS.'
+                }), {
+                    status: 200,
+                    headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                               ...generateForensicHeaders(requestId) }
+                });
+            } catch (_tsaErr) {
+                // Falha EXPLÍCITA — o script.js activa fallback Nível 1 com alerta visível ao perito.
+                return new Response(JSON.stringify({
+                    error:     'TSA_UNAVAILABLE',
+                    detail:    _tsaErr.message,
+                    fallback:  'NIVEL1_REQUIRED',
+                    timestamp: new Date().toISOString(),
+                    hash:      _hashToSeal,
+                    note:      'FreeTSA indisponível. Activar Nível 1 (hash SHA-256 interno). Ver Opção A — Carregar TSR.'
+                }), {
+                    status: 503,
+                    headers: { ..._corsHeaders(request), 'Content-Type': 'application/json',
+                               ...generateForensicHeaders(requestId) }
+                });
+            }
+        }
+        // ── FIM ROTA /tsa ─────────────────────────────────────────────────────
 
         // ── [UNIFED-PROXY-005] GUARDA ANTECIPADA DE CONTENT-TYPE ──────────────
         // Rejeição imediata de payloads não-JSON antes de qualquer parsing de body.
