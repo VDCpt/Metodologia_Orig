@@ -1,13 +1,13 @@
 /**
  * ============================================================================
- * UNIFED-PROBATUM | MÓDULO DE EXPORTAÇÃO FORENSE — PACOTE CONTRA-PERÍCIA
+ * UNIFED-PROBATUM | MÓDULO DE EXPORTAÇÃO FORENSE — PACOTE CONTRA-CONSULTORIA TÉCNICA
  * ============================================================================
  * Versão  : v1.0-CONTRAPERIRIA
  * Normas  : ISO/IEC 27037:2012 · Art. 125.º CPP · D.L. n.º 28/2019 · eIDAS 2.0
  *
  * PROPÓSITO:
  *   Gera um pacote ZIP auto-suficiente com todos os artefactos que permitem
- *   a qualquer perito independente ou contra-parte verificar, de forma
+ *   a qualquer consultor técnico independente ou contra-parte verificar, de forma
  *   determinística, a integridade matemática e a cadeia de custódia do sistema
  *   UNIFED-PROBATUM, sem acesso ao código-fonte original.
  *
@@ -21,7 +21,7 @@
  *   07_PATCH_REGISTRY.json          — registo dos patches aplicados + checksums
  *   08_VERIFICACAO_MATEMATICA.json  — prova aritmética dos 4 checksums
  *   09_CONFIG_SISTEMA.json          — UNIFED_CONFIG (sem tokens)
- *   10_INSTRUCOES_VERIFICACAO.txt   — protocolo passo-a-passo para contra-perito
+ *   10_INSTRUCOES_VERIFICACAO.txt   — protocolo passo-a-passo para contra-consultor técnico
  *
  * CADEIA DE CUSTÓDIA:
  *   Master Hash SHA-256 calculado sobre o payload JSON serializado de cada
@@ -31,11 +31,11 @@
  *   - Art. 125.º CPP: admissibilidade de prova digital
  *   - ISO/IEC 27037:2012, secção 6.3: aquisição e preservação de prova digital
  *   - D.L. n.º 28/2019: integridade de documentos electrónicos
- *   - Art. 163.º CPP: força probatória do relatório pericial
+ *   - Art. 163.º CPP: força probatória do relatório técnico-jurídica
  * ============================================================================
  */
 
-(function _installContrapericiaExport() {
+(function _installAuditoriaExport() {
     'use strict';
 
     // ── PATCH P14 — patch_unifed_macro_v13 (helper i18n partilhado) ─────────
@@ -241,11 +241,11 @@
         };
     }
 
-    // ── Instruções de verificação para contra-perito ─────────────────────────
+    // ── Instruções de verificação para contra-consultor técnico ─────────────────────────
     function _buildInstrucoes(verificacao) {
         return [
             '============================================================',
-            ' UNIFED-PROBATUM | PACOTE DE CONTRA-PERÍCIA',
+            ' UNIFED-PROBATUM | PACOTE DE CONTRA-CONSULTORIA TÉCNICA',
             ' Protocolo de Verificação Independente',
             ' Norma: ISO/IEC 27037:2012 · Art. 125.º CPP',
             '============================================================',
@@ -313,8 +313,8 @@
     }
 
     // ── PATCH P33 — patch_unifed_macro_v13 (Secção 3.A) ──────────────────────
-    // PROTOCOLO DE CONTRA-PERÍCIA FORENSE (PEF-UNIFED-02): PDF dedicado para
-    // perito independente/entidades judiciais, com os parâmetros matemáticos
+    // PROTOCOLO DE CONTRA-CONSULTORIA TÉCNICA FORENSE (PEF-UNIFED-02): PDF dedicado para
+    // consultor técnico independente/entidades judiciais, com os parâmetros matemáticos
     // bloqueados (verificacaoMat, gerada por _verificacaoMatematica — mesma
     // função usada em 08_VERIFICACAO_MATEMATICA.json) e o veredicto de
     // coerência. Campos confirmados: input.omissaoCustos_acumulado,
@@ -322,7 +322,7 @@
     // coerenciaTotal, veredicto.
     async function _gerarPDFInstrucoesTribunal(verificacaoMat, sys) {
         if (typeof pdfMake === 'undefined') {
-            console.warn('[CONTRAPERICIA] pdfMake indisponível. PDF não gerado.');
+            console.warn('[AUDITORIA-EXPORT] pdfMake indisponível. PDF não gerado.');
             return null;
         }
 
@@ -330,13 +330,13 @@
             pageSize: 'A4',
             pageMargins: [50, 60, 50, 60],
             content: [
-                { text: 'PROTOCOLO DE CONTRA-PERÍCIA FORENSE (PEF-UNIFED-02)', fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 10], color: '#b91c1c' },
-                { text: 'Instruções e Manifesto de Integridade para Perito Independente e Entidades Judiciais', fontSize: 10, alignment: 'center', color: '#475569', margin: [0, 0, 0, 25] },
+                { text: 'PROTOCOLO DE CONTRA-CONSULTORIA TÉCNICA FORENSE (PEF-UNIFED-02)', fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 10], color: '#b91c1c' },
+                { text: 'Instruções e Manifesto de Integridade para Consultor Técnico Independente e Entidades Judiciais', fontSize: 10, alignment: 'center', color: '#475569', margin: [0, 0, 0, 25] },
 
-                { text: 'Este pacote contém a integralidade dos artefactos digitais, logs forenses, cadeia de custódia e ficheiros de configuração (sem chaves privadas) necessários para a reconstituição matemática estrita do cálculo pericial apresentado pela acusação.', margin: [0, 0, 0, 15], alignment: 'justify' },
+                { text: 'Este pacote contém a integralidade dos artefactos digitais, logs forenses, cadeia de custódia e ficheiros de configuração (sem chaves privadas) necessários para a reconstituição matemática estrita do cálculo técnico-jurídica apresentado pela acusação.', margin: [0, 0, 0, 15], alignment: 'justify' },
 
                 { text: '1. DIRETRIZES DE VERIFICAÇÃO', style: 'h2' },
-                { text: 'Nos termos da ISO/IEC 27037:2012, o perito revisor deve:\n\n1. Validar o Master Hash listado abaixo contra todos os artefactos incluídos neste ZIP.\n2. Recalcular a fórmula determinística de Dano:\n   (Omissão de Custos / Meses) × 38.000 × 12 × 7\n3. Inspecionar o ficheiro 02_LOG_FORENSE_COMPLETO.json para descartar adulteração cronológica (Time Stomping).', margin: [0, 0, 0, 15] },
+                { text: 'Nos termos da ISO/IEC 27037:2012, o consultor técnico revisor deve:\n\n1. Validar o Master Hash listado abaixo contra todos os artefactos incluídos neste ZIP.\n2. Recalcular a fórmula determinística de Dano:\n   (Omissão de Custos / Meses) × 38.000 × 12 × 7\n3. Inspecionar o ficheiro 02_LOG_FORENSE_COMPLETO.json para descartar adulteração cronológica (Time Stomping).', margin: [0, 0, 0, 15] },
 
                 { text: '2. PARÂMETROS MATEMÁTICOS BLOQUEADOS', style: 'h2' },
                 { text: `• Omissão de Custos Acumulada: ${verificacaoMat.input.omissaoCustos_acumulado}\n• Meses com Dados: ${verificacaoMat.input.mesesDados}\n• Média Mensal de Omissão: ${verificacaoMat.input.mediaMensalOmissao}\n• Dano Global (Checksum de Referência): ${verificacaoMat.checksumEsperado} €`, margin: [0, 0, 0, 20] },
@@ -344,7 +344,7 @@
                 { text: '3. VEREDICTO DE INTEGRIDADE LOCAL', style: 'h2' },
                 { text: `O motor de autodiagnóstico reporta: ${verificacaoMat.veredicto}`, bold: true, color: verificacaoMat.coerenciaTotal ? '#15803d' : '#b91c1c', margin: [0, 0, 0, 30] },
 
-                { text: `Sessão Pericial Original: ${sys.sessionId || 'N/A'}\nData de Emissão do Pacote: ${new Date().toLocaleString('pt-PT')}`, fontSize: 9, color: '#64748b' }
+                { text: `Sessão Técnico-Jurídica Original: ${sys.sessionId || 'N/A'}\nData de Emissão do Pacote: ${new Date().toLocaleString('pt-PT')}`, fontSize: 9, color: '#64748b' }
             ],
             styles: { h2: { fontSize: 12, bold: true, margin: [0, 10, 0, 8], color: '#1e3a8a', decoration: 'underline' } }
         };
@@ -478,7 +478,7 @@
             // Gerar e anexar o PDF Exclusivo PEF-UNIFED-02
             const pdfInstrucoesBlob = await _gerarPDFInstrucoesTribunal(verificacaoMat, sys);
             if (pdfInstrucoesBlob) {
-                zip.file(pasta + 'UNIFED_Protocolo_ContraPericia_Tribunal.pdf', pdfInstrucoesBlob);
+                zip.file(pasta + 'UNIFED_Protocolo_Auditoria_Tribunal.pdf', pdfInstrucoesBlob);
             }
 
             const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
@@ -499,7 +499,7 @@
                     timestamp: new Date().toISOString(),
                     level: 'info',
                     module: 'CONTRAPERIRIA_EXPORT',
-                    message: 'Pacote de contra-perícia exportado com sucesso.',
+                    message: 'Pacote de contra-consultoria técnica exportado com sucesso.',
                     data: {
                         masterHashPacote: masterHashFinal,
                         totalArtefactos:  artefactos.length + 2,
@@ -514,7 +514,7 @@
                 btn.textContent = '✅ PACOTE GERADO';
                 _syncTranslate();
                 setTimeout(() => {
-                    btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-PERÍCIA';
+                    btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-CONSULTORIA TÉCNICA';
                     btn.disabled    = false;
                     _syncTranslate();
                 }, 3000);
@@ -526,7 +526,7 @@
                 btn.disabled    = false;
                 btn.textContent = '❌ ERRO — ' + err.message.substring(0, 40);
                 setTimeout(() => {
-                    btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-PERÍCIA';
+                    btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-CONSULTORIA TÉCNICA';
                     _syncTranslate();
                 }, 5000);
             }
@@ -544,18 +544,19 @@
         // E por unifed:interfaceShown, criando botões duplicados em condições de
         // corrida (ambos os eventos disparam antes do primeiro DOM check resolver).
         // CORRIGIDO: flag global síncrona, verificada antes de qualquer outra lógica.
-        if (window._contrapericiaInjectado) return;
+        if (window._auditoriaExportInjectado) return;
         if (document.getElementById('unifed-contraperiria-btn')) {
-            window._contrapericiaInjectado = true;
+            window._auditoriaExportInjectado = true;
             return;
         }
-        window._contrapericiaInjectado = true;
+        window._auditoriaExportInjectado = true;
 
         const btn = document.createElement('button');
         btn.id        = 'unifed-contraperiria-btn';
+        btn.disabled  = true;  // FASE 3.1: estado inicial sempre desactivado — libertação por UNIFED_TOP3_READY
         btn.className = 'pure-btn-atf pure-btn-pacote';
-        btn.title     = 'Gerar pacote ZIP completo para verificação independente por contra-perito ou autoridade judicial';
-        btn.setAttribute('data-pt', '🛡️ EXPORTAR PACOTE CONTRA-PERÍCIA');
+        btn.title     = 'Gerar pacote ZIP completo para verificação independente por contra-consultor técnico ou autoridade judicial';
+        btn.setAttribute('data-pt', '🛡️ EXPORTAR PACOTE CONTRA-CONSULTORIA TÉCNICA');
         btn.setAttribute('data-en', '🛡️ EXPORT COUNTER-EXPERTISE PACKAGE');
         btn.style.cssText = [
             'display:block',
@@ -573,7 +574,7 @@
             'cursor:pointer',
             'transition:background 0.2s,box-shadow 0.2s'
         ].join(';');
-        btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-PERÍCIA';
+        btn.textContent = '🛡️ EXPORTAR PACOTE CONTRA-CONSULTORIA TÉCNICA';
         btn.onclick = exportarPacoteContraperiria;
 
         btn.onmouseenter = () => {
@@ -632,24 +633,88 @@
         injectarBotao();
     }
 
-    // Aguardar evento UNIFED_ANALYSIS_COMPLETE para exibir o botão com dados reais
+    // ── FASE 3.1 — GUARD CRIPTOGRÁFICO ASSÍNCRONO ────────────────────────────
+    // Problema verificado: UNIFED_ANALYSIS_COMPLETE é despachado ANTES da
+    // conclusão assíncrona de UNIFED_MerkleEngine.generateMerkleRoot(), que
+    // é invocado em _autoGenerateTop3() após o disparo do evento (script.js:5884).
+    // Solução: botão criado com disabled=true; libertação condicionada ao evento
+    // UNIFED_TOP3_READY (confirmação de que merkleRoot foi populado em
+    // UNIFEDSystem.analysis.merkleRoot). Timeout de 30s como fallback de segurança.
+    // Interface real verificada: window.UNIFED_MerkleEngine.generateMerkleRoot()
+    // (não existe getLatestRoot nem generateStateHash — ver unifed_merkle_engine.js).
+    // ─────────────────────────────────────────────────────────────────────────
+
+    window._merkleRootReady = false;
+
     window.addEventListener('UNIFED_ANALYSIS_COMPLETE', () => {
         injectarBotao();
         const btn = document.getElementById('unifed-contraperiria-btn');
         if (btn) {
+            // Estado inicial sempre desactivado — aguarda confirmação criptográfica
+            btn.disabled      = true;
             btn.style.display = 'block';
-            // PATCH P14 — re-sincronizar tradução após tornar o botão visível
-            if (typeof window.forceTranslateUI === 'function') {
-                window.forceTranslateUI();
-            } else if (window.UNIFED_TRANSLATIONS && typeof window.UNIFED_TRANSLATIONS.forceTranslateUI === 'function') {
-                window.UNIFED_TRANSLATIONS.forceTranslateUI();
-            }
+            btn.textContent   = '⏳ A Calcular Integridade Criptográfica...';
+            btn.style.opacity = '0.6';
+            btn.style.cursor  = 'not-allowed';
         }
-        console.log('[CONTRAPERIRIA] ✅ Activado após análise completa.');
+        console.log('[AUDITORIA-EXPORT] ⏳ Botão injectado em estado desactivado — aguarda UNIFED_TOP3_READY.');
+
+        // Timeout de segurança: 30s sem TOP3_READY → liberta com aviso de auditoria forense
+        window._merkleTimeoutHandle = setTimeout(() => {
+            if (!window._merkleRootReady) {
+                console.warn('[AUDITORIA-EXPORT] ⚠️ Timeout 30s — Merkle Root não confirmada. Botão libertado com aviso.');
+                const _btn = document.getElementById('unifed-contraperiria-btn');
+                if (_btn) {
+                    _btn.disabled      = false;
+                    _btn.style.opacity = '1';
+                    _btn.style.cursor  = 'pointer';
+                    _btn.textContent   = '⚠️ EXPORTAR (Integridade Merkle Pendente)';
+                }
+            }
+        }, 30000);
+    });
+
+    // UNIFED_TOP3_READY: único gate de autorização — disparado APÓS generateMerkleRoot concluir
+    document.addEventListener('UNIFED_TOP3_READY', () => {
+        window._merkleRootReady = true;
+
+        // Cancelar timeout de segurança
+        if (window._merkleTimeoutHandle) {
+            clearTimeout(window._merkleTimeoutHandle);
+            window._merkleTimeoutHandle = null;
+        }
+
+        const merkleRoot = (window.UNIFEDSystem &&
+                            window.UNIFEDSystem.analysis &&
+                            window.UNIFEDSystem.analysis.merkleRoot) || null;
+
+        const btn = document.getElementById('unifed-contraperiria-btn');
+        if (!btn) return;
+
+        if (merkleRoot && typeof merkleRoot === 'string' && merkleRoot.length === 64) {
+            btn.disabled      = false;
+            btn.style.opacity = '1';
+            btn.style.cursor  = 'pointer';
+            btn.textContent   = '🛡️ EXPORTAR PACOTE DE AUDITORIA TÉCNICA';
+            console.log('[AUDITORIA-EXPORT] ✅ Botão libertado — Merkle Root confirmada: ' + merkleRoot.substring(0, 16) + '...');
+        } else {
+            btn.disabled      = false;
+            btn.style.opacity = '0.8';
+            btn.style.cursor  = 'pointer';
+            btn.textContent   = '⚠️ EXPORTAR (Merkle Root Inválida)';
+            console.error('[AUDITORIA-EXPORT] ❌ Merkle Root ausente ou inválida após TOP3_READY. Cadeia de custódia comprometida.');
+        }
+
+        // Re-sincronizar tradução após libertação do botão
+        if (typeof window.forceTranslateUI === 'function') {
+            window.forceTranslateUI();
+        } else if (window.UNIFED_TRANSLATIONS && typeof window.UNIFED_TRANSLATIONS.forceTranslateUI === 'function') {
+            window.UNIFED_TRANSLATIONS.forceTranslateUI();
+        }
     });
 
     window.addEventListener('unifed:interfaceShown', injectarBotao, { once: false });
 
-    console.log('[CONTRAPERIRIA] 🛡️ Módulo de Contra-Perícia instalado — ' + MODULE_VERSION);
+    console.log('[AUDITORIA-EXPORT] 🛡️ Módulo de Exportação de Auditoria Técnica instalado — ' + MODULE_VERSION);
 
 })();

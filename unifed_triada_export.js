@@ -47,7 +47,7 @@
  *   tipologias de risco, salvaguarda jurisdicional, certificação digital, factos C1..C4,
  *   impacto fiscal/sistémico, perda de chance, práticas de ofuscação, quadro tributário,
  *   inversão do ónus da prova, diagramas, score de persistência, síntese jurídica,
- *   cadeia de custódia detalhada, validação de selagem, questionário pericial,
+ *   cadeia de custódia detalhada, validação de selagem, questionário técnico-jurídica,
  *   nota de reconciliação DAC7, questões para contraditório e declaração de compromisso.
  * ============================================================================
  * RETIFICAÇÃO CIRÚRGICA v1.0-COMMERCIAL-LITIGATION: CORRECÇÃO DO ESTILO footerText
@@ -121,9 +121,9 @@
     // =========================================================================
     const i18nDict = {
         pt: {
-            'forensic_analyst_report': 'DOCUMENTO PERICIAL INTEGRAL - ANALISTA',
+            'forensic_analyst_report': 'DOCUMENTO TÉCNICO-JURÍDICA INTEGRAL - ANALISTA',
             'forensic_legal_package': 'PACOTE DE SUBMISSÃO JUDICIAL (2 PDFs + DOCX + JSON)',
-            'forensic_analyst_header': 'DOCUMENTO PERICIAL INTEGRAL',
+            'forensic_analyst_header': 'DOCUMENTO TÉCNICO-JURÍDICA INTEGRAL',
             'forensic_legal_header': 'PACOTE DE SUBMISSÃO JUDICIAL',
             'pdf_footer_cert': 'ISO/IEC 27037 · DL 28/2019 · eIDAS 2.0',
             'btn_export_analyst': 'Exportar Pacote Analista (Parecer Técnico Forense + JSON)',
@@ -770,7 +770,7 @@
     function _generateFallbackHTML(metrics, tipo, pendingEvidenceIds) {
         const lang = window.currentLang || 'pt';
         const isPT = (window.currentLang || 'pt') === 'pt'; // declaração local explícita
-        const title = tipo === 'analista' ? (isPT ? 'Relatório Pericial Analista' : 'Analyst Forensic Report') :
+        const title = tipo === 'analista' ? (isPT ? 'Relatório Técnico-Jurídica Analista' : 'Analyst Forensic Report') :
                       tipo === 'parecer' ? (isPT ? 'Parecer Técnico Forense' : 'Forensic Technical Opinion') :
                       (isPT ? 'Anexo de Custódia' : 'Custody Annex');
         
@@ -875,7 +875,7 @@
         const isPT = lang === 'pt';
         const content = [];
         
-        content.push({ text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL', style: 'headerTitle', alignment: 'center', margin: [0, 0, 0, 4] });
+        content.push({ text: 'UNIFED - PROBATUM | UNIDADE DE CONSULTORIA TÉCNICA FISCAL E DIGITAL', style: 'headerTitle', alignment: 'center', margin: [0, 0, 0, 4] });
         content.push({ text: 'ESTRUTURA DE PARECER TÉCNICO FORENSE MOD. 03-B (NORMA ISO/IEC 27037)', style: 'normal', alignment: 'center', bold: true, color: '#64748b', margin: [0, 0, 0, 15] });
         
         content.push({
@@ -904,12 +904,12 @@
 
         content.push({ text: isPT ? '1. NOTA METODOLÓGICA FORENSE - MÉTODO DATA PROXY: FLEET EXTRACT' : '1. FORENSIC METHODOLOGY NOTE - DATA PROXY: FLEET EXTRACT', style: 'h1', margin: [0, 10, 0, 5] });
         content.push({ 
-            text: 'Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro \'Ganhos da Empresa\' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).', 
+            text: 'Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente consultoria técnica utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro \'Ganhos da Empresa\' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).', 
             style: 'normal', 
             margin: [0, 2, 0, 12] 
         });
 
-        content.push({ text: isPT ? '2. METADADOS E ALVO DA PERÍCIA' : '2. METADATA AND PERITIA TARGET', style: 'h1', margin: [0, 8, 0, 5] });
+        content.push({ text: isPT ? '2. METADADOS E ALVO DA CONSULTORIA TÉCNICA' : '2. METADATA AND PERITIA TARGET', style: 'h1', margin: [0, 8, 0, 5] });
         
         const metaGrid = {
             style: 'tableMeta',
@@ -959,7 +959,7 @@
         };
         content.push(metricsTable);
         
-        content.push({ text: isPT ? '6. VEREDITO PERICIAL' : '6. FORENSIC VERDICT', style: 'h1', margin: [0, 10, 0, 5] });
+        content.push({ text: isPT ? '6. VEREDITO TÉCNICO-JURÍDICA' : '6. FORENSIC VERDICT', style: 'h1', margin: [0, 10, 0, 5] });
         content.push({ text: m.verdict, style: 'normal', margin: [0, 2, 0, 12], bold: true, color: '#1e3a8a' });
         
         if (m.top3Questions && m.top3Questions.length > 0) {
@@ -1156,7 +1156,7 @@
         content.push({ text: isPT ? 'Declaro, sob compromisso de honra, que o presente anexo reflete fielmente os registos de custódia e os hashes de integridade calculados no momento da exportação, não tendo sido efetuadas quaisquer alterações não rastreáveis.' : 'I declare, under oath, that this annex faithfully reflects the custody records and integrity hashes calculated at the time of export, and that no untraceable changes have been made.', style: 'normal', margin: [0, 2, 0, 20] });
         content.push({ text: `${isPT ? 'Data' : 'Date'}: ${new Date().toLocaleString(lang)}`, style: 'normal', margin: [0, 10, 0, 5] });
         content.push({ text: '_____________________________________________', style: 'normal', alignment: 'center', margin: [0, 10, 0, 2] });
-        content.push({ text: isPT ? 'Perito Analista / Responsável de Custódia' : 'Forensic Analyst / Custody Officer', style: 'normal', alignment: 'center', italics: true });
+        content.push({ text: isPT ? 'Consultor Técnico Analista / Responsável de Custódia' : 'Forensic Analyst / Custody Officer', style: 'normal', alignment: 'center', italics: true });
         
         return content;
     }
@@ -1212,7 +1212,7 @@
                     if (Array.isArray(dm)) return dm;
                     return [];
                 })(),
-                legalBasis: 'Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. O ficheiro Ganhos da Empresa (Fleet/Ledger) é tratado como Livro-Razão de suporte, com valor probatório material, em conformidade com o Decreto-Lei n.º 28/2019 e o Art. 125.º CPP.'
+                legalBasis: 'Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente consultoria técnica utiliza o método de Data Proxy: Fleet Extract. O ficheiro Ganhos da Empresa (Fleet/Ledger) é tratado como Livro-Razão de suporte, com valor probatório material, em conformidade com o Decreto-Lei n.º 28/2019 e o Art. 125.º CPP.'
             },
             integrity: {
                 masterHash: metrics.masterHash,
@@ -1788,7 +1788,7 @@
                                         {
                                             stack: [
                                                 {
-                                                    text: 'UNIFED - PROBATUM | UNIDADE DE PERÍCIA FISCAL E DIGITAL',
+                                                    text: 'UNIFED - PROBATUM | UNIDADE DE CONSULTORIA TÉCNICA FISCAL E DIGITAL',
                                                     fontSize: 16,
                                                     bold: true,
                                                     color: '#1e3a8a',
@@ -1876,7 +1876,7 @@
 
                 // ========== 2. NOTA METODOLÓGICA FORENSE ==========
                 { text: "NOTA METODOLÓGICA FORENSE — MÉTODO: DATA PROXY: FLEET EXTRACT:", style: 'h2' },
-                { text: "Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente perícia utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).", style: 'normal', margin: [0, 0, 0, 10] },
+                { text: "Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, a presente consultoria técnica utiliza o método de Data Proxy: Fleet Extract. Esta metodologia consiste na extração de dados brutos primários diretamente do portal de gestão (Fleet). O ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, possuindo valor probatório material por constituir a fonte primária dos registos que integram o reporte fiscal final. A integridade desta extração é blindada através da assinatura digital SHA-256 (Hash).", style: 'normal', margin: [0, 0, 0, 10] },
 
                 // ========== 3. FUNDAMENTAÇÃO DA PROVA MATERIAL ==========
                 { text: "FUNDAMENTAÇÃO DA PROVA MATERIAL:", style: 'h2' },
@@ -1919,8 +1919,8 @@
                 { text: "INVIOLABILIDADE DO ALGORITMO:", style: 'h2' },
                 { text: "Os cálculos de triangulação financeira (BTOR vs BTF) e os vereditos de risco são gerados por motor forense imutável, com base exclusiva nos dados extraídos das evidências carregadas.", style: 'normal', margin: [0, 0, 0, 15] },
 
-                // ========== 6. METADADOS DA PERÍCIA ==========
-                { text: "METADADOS DA PERÍCIA", style: 'h2' },
+                // ========== 6. METADADOS DA CONSULTORIA TÉCNICA ==========
+                { text: "METADADOS DA CONSULTORIA TÉCNICA", style: 'h2' },
                 { text: `Nome / Name: ${m.companyName}\nNIF / Tax ID: ${m.nif}\nPlataforma Digital / Digital Platform: ${m.platform}\nMorada / Address: A verificar em documentação complementar\nNIF Plataforma / Platform Tax ID: A VERIFICAR\nAno Fiscal: 2024\nPeríodo: 2s\nUnix Timestamp: ${unixTimestamp}`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 7. ANÁLISE FINANCEIRA CRUZADA ==========
@@ -1957,7 +1957,7 @@
                     },
                     margin: [0, 0, 0, 10]
                 },
-                { text: `[I] Percentagem Omissão Custos (Retenção vs Fatura): ${percOmissaoCustos.toFixed(2)}%\nNota Pericial: ${percOmissaoCustos.toFixed(2)}% de omissão é estatisticamente impossível de ser erro administrativo.\nOmissão de Receita (Bruto vs DAC7): ${formatForensicCurrency(omissaoReceita)}\nOmissão de Custos (Retenção vs Fatura): ${formatForensicCurrency(omissaoCustos)}`, style: 'normal', margin: [0, 0, 0, 15] },
+                { text: `[I] Percentagem Omissão Custos (Retenção vs Fatura): ${percOmissaoCustos.toFixed(2)}%\nNota Técnico-Jurídica: ${percOmissaoCustos.toFixed(2)}% de omissão é estatisticamente impossível de ser erro administrativo.\nOmissão de Receita (Bruto vs DAC7): ${formatForensicCurrency(omissaoReceita)}\nOmissão de Custos (Retenção vs Fatura): ${formatForensicCurrency(omissaoCustos)}`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 8. VEREDICTO DE RISCO ==========
                 { text: "3. VEREDICTO DE RISCO / RISK VERDICT (RGIT - Art. 103.º)", style: 'h2' },
@@ -1998,7 +1998,7 @@
                                     { text: formatForensicCurrency(omissaoCustos), bold: true, fontSize: 12, color: '#ef4444' },
                                     { text: '(' + percOmissaoCustos.toFixed(2) + '%)', fontSize: 8, color: '#f87171' }
                                 ], alignment: 'center', fillColor: '#1a0808', margin: [4,6,4,6] },
-                                { text: 'Art. 103.º RGIT (Fraude Fiscal) · Art. 29.º n.º1 al. b) CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
+                                { text: 'Art. 103.º RGIT (Fraude Fiscal) · Art. 29.º n.º1 al. b) CIVA (Faturação) · Art. 125.º CPP (Prova Técnico-Jurídica)', fontSize: 6.5, color: '#94a3b8', lineHeight: 1.4, margin: [4,6,4,6] }
                             ],
                             // PROVA RAINHA I — RETENÇÃO ILÍCITA
                             [
@@ -2046,17 +2046,17 @@ Decreto-Lei n.º 28/2019: Integridade do processamento de dados e validade de do
 
 ADMISSIBILIDADE DA PROVA DIGITAL:
 • Art. 125.º CPP — São admissíveis como meios de prova todos os meios não proibidos por lei. Esta prova digital material foi produzida com metodologia forense certificada e cadeia de custódia documentada, sendo plenamente admissível perante as Instâncias Judiciais Competentes.
-• Art. 32.º CRP — Garantias de Defesa: o processo penal assegura todas as garantias de defesa, incluindo o recurso à prova técnica pericial para contraditório fundamentado.
+• Art. 32.º CRP — Garantias de Defesa: o processo penal assegura todas as garantias de defesa, incluindo o recurso à prova técnica técnico-jurídica para contraditório fundamentado.
 • Art. 103.º RGIT — Fraude Fiscal: omissão de proveitos e retenção indevida de IVA.
 • Art. 104.º RGIT — Fraude Fiscal Qualificada: quando a omissão excede os limiares legais.`, style: 'normal', margin: [0, 0, 0, 15] },
 
-                // ========== 11. METODOLOGIA PERICIAL BTOR ==========
-                { text: "6. METODOLOGIA PERICIAL BTOR", style: 'h2' },
+                // ========== 11. METODOLOGIA TÉCNICO-JURÍDICA BTOR ==========
+                { text: "6. METODOLOGIA TÉCNICO-JURÍDICA BTOR", style: 'h2' },
                 { text: "BTOR (Bank Transactions Over Reality): Análise comparativa entre despesas reais (extratos) e documentação fiscal declarada (faturas).\n• Mapeamento posicional de dados SAF-T/Relatório (colunas 14,15,16)\n• Extração precisa da tabela \"Ganhos líquidos\" do extrato\n• Cálculo de duas discrepâncias: despesas e SAF-T/Relatório vs DAC7\n• Geração de prova técnica auditável com hashes SHA-256", style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 12. DECLARAÇÃO DE INDEPENDÊNCIA ==========
                 { text: "DECLARAÇÃO DE INDEPENDÊNCIA E ESCOPO — ISRS 4400 / ART. 153.º CPP", style: 'h2' },
-                { text: "O presente estudo foi elaborado em estrita conformidade com a Norma Internacional de Serviços Relacionados ISRS 4400 (Procedimentos Acordados sobre Informação Financeira), garantindo que os procedimentos aplicados são objetivos, reprodutíveis e auditáveis por qualquer perito independente. O analista declara total independência face às partes e ausência de conflito de interesses, nos termos do Art. 467.º do CPC e Art. 153.º do CPP.\n\nESCOPO: O estudo limita-se à análise objetiva dos documentos fornecidos (extratos de plataforma, SAF-T, DAC7, faturas). As conclusões constituem estudo de viabilidade pericial e não substituem relatório pericial homologado por Tribunal. A sua produção assenta em metodologia BTOR (Bank Transactions Over Reality), com rastreabilidade criptográfica completa (SHA-256 + RFC 3161).", style: 'normal', margin: [0, 0, 0, 15] },
+                { text: "O presente estudo foi elaborado em estrita conformidade com a Norma Internacional de Serviços Relacionados ISRS 4400 (Procedimentos Acordados sobre Informação Financeira), garantindo que os procedimentos aplicados são objetivos, reprodutíveis e auditáveis por qualquer consultor técnico independente. O analista declara total independência face às partes e ausência de conflito de interesses, nos termos do Art. 467.º do CPC e Art. 153.º do CPP.\n\nESCOPO: O estudo limita-se à análise objetiva dos documentos fornecidos (extratos de plataforma, SAF-T, DAC7, faturas). As conclusões constituem estudo de viabilidade técnico-jurídica e não substituem relatório técnico-jurídica homologado por Tribunal. A sua produção assenta em metodologia BTOR (Bank Transactions Over Reality), com rastreabilidade criptográfica completa (SHA-256 + RFC 3161).", style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 13. ANÁLISE DE TIPOLOGIAS DE RISCO ==========
                 { text: "ANÁLISE DE TIPOLOGIAS DE RISCO DETETADAS — CEJ / PJ / RGIT", style: 'h2' },
@@ -2070,9 +2070,9 @@ ADMISSIBILIDADE DA PROVA DIGITAL:
                 { text: "7. CERTIFICAÇÃO DIGITAL", style: 'h2' },
                 { text: "Sistema de peritagem forense estruturado em conformidade com as normas, com selo de integridade digital SHA-256. Todos os relatórios são temporalmente selados e auditáveis.\n\nAlgoritmo Hash: SHA-256 (Forense)\nTimestamp: RFC 3161\nValidade Prova: Indeterminada\nCertificação: UNIFIED - PROBATUM v1.0-COMMERCIAL-LITIGATION · DORA COMPLIANT\n\nEste relatório cumpre com o Regulamento (UE) 2022/2554 (DORA) - Digital Operational Resilience Act, assegurando a resiliência operacional digital e a integridade das evidências digitais processadas.", style: 'normal', margin: [0, 0, 0, 15] },
 
-                // ========== 16. ANÁLISE PERICIAL DETALHADA ==========
-                { text: "8. ANÁLISE PERICIAL / DETAILED EXPERT ANALYSIS", style: 'h2' },
-                { text: `I. ANÁLISE PERICIAL (2S):\nDuas discrepâncias fundamentais detetadas (Verdade Material Auditada):\n\n1. Diferencial de Base em Análise (Despesas/Comissões vs Fatura): ${formatForensicCurrency(omissaoCustos)} (${percOmissaoCustos.toFixed(2)}%) [Smoking Gun 2]\n\n2. SAF-T Valor Bruto Total vs DAC7 (Revenue Omission): ${formatForensicCurrency(omissaoReceita)} (${m.discrepancyPct.toFixed(2)}%) [Smoking Gun 1]`, style: 'normal', margin: [0, 0, 0, 15] },
+                // ========== 16. ANÁLISE TÉCNICO-JURÍDICA DETALHADA ==========
+                { text: "8. ANÁLISE TÉCNICO-JURÍDICA / DETAILED EXPERT ANALYSIS", style: 'h2' },
+                { text: `I. ANÁLISE TÉCNICO-JURÍDICA (2S):\nDuas discrepâncias fundamentais detetadas (Verdade Material Auditada):\n\n1. Diferencial de Base em Análise (Despesas/Comissões vs Fatura): ${formatForensicCurrency(omissaoCustos)} (${percOmissaoCustos.toFixed(2)}%) [Smoking Gun 2]\n\n2. SAF-T Valor Bruto Total vs DAC7 (Revenue Omission): ${formatForensicCurrency(omissaoReceita)} (${m.discrepancyPct.toFixed(2)}%) [Smoking Gun 1]`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ── PATCH P30 — patch_unifed_macro_v13 (1.C adaptado) ───────────────
                 // ANTERIOR: o PDF não continha um parágrafo equivalente a
@@ -2130,14 +2130,14 @@ ADMISSIBILIDADE DA PROVA DIGITAL:
 
                 // ========== 19. IMPACTO SISTÉMICO ESTIMADO ==========
                 { text: `IMPACTO SISTÉMICO ESTIMADO (7 Anos · 38.000 operadores x 12 meses): ${formatForensicCurrency(impacto7Anos)}`, style: 'h2' },
-                { text: `Esta perícia revela um padrão de omissão que, extrapolado ao universo de 38.000 operadores, representa uma exposição tributária de ${formatForensicCurrency(impacto7Anos)}. Este dado fundamenta a relevância da presente ação para a tutela de interesses coletivos e correção de distorções de mercado. Projeção: Omissão mensal média x 38.000 motoristas TVDE (INE/IMT) x 12 meses x 7 anos (prazo Art. 45.º LGT). Projeção fundamenta relevância processual para escritórios de elite (Projection supports legal relevance for elite law firms).`, style: 'normal', margin: [0, 0, 0, 15] },
+                { text: `Esta consultoria técnica revela um padrão de omissão que, extrapolado ao universo de 38.000 operadores, representa uma exposição tributária de ${formatForensicCurrency(impacto7Anos)}. Este dado fundamenta a relevância da presente ação para a tutela de interesses coletivos e correção de distorções de mercado. Projeção: Omissão mensal média x 38.000 motoristas TVDE (INE/IMT) x 12 meses x 7 anos (prazo Art. 45.º LGT). Projeção fundamenta relevância processual para escritórios de elite (Projection supports legal relevance for elite law firms).`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 20. PERDA DE CHANCE E DANO REPUTACIONAL ==========
                 { text: "PERDA DE CHANCE E DANO REPUTACIONAL — RESPONSABILIDADE CIVIL EXTRACONTRATUAL", style: 'h2' },
                 { text: `Dano Reputacional e Perda de Chance: O reporte viciado da plataforma à Autoridade Tributária (com uma discrepância detetada de ${formatForensicCurrency(omissaoReceita)}) contamina diretamente o perfil de risco (Risk Scoring) do parceiro. Sendo a plataforma a detentora do monopólio de emissão documental (Art. 36.º n.º 11 CIVA), o sujeito passivo é penalizado sem dolo. Esta adulteração do perfil fiscal gera lucros cessantes mensuráveis, inibindo o acesso a financiamento bancário, linhas de crédito e benefícios fiscais, constituindo fundamento para indemnização por responsabilidade civil extracontratual.`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 21. NOTA TÉCNICA SOBRE PRÁTICAS DE OFUSCAÇÃO ==========
-                { text: "FORENSIC NOTE / NOTA TÉCNICA PERICIAL — Data Obfuscation Practices:", style: 'h2' },
+                { text: "FORENSIC NOTE / NOTA TÉCNICA TÉCNICO-JURÍDICA — Data Obfuscation Practices:", style: 'h2' },
                 { text: `A análise detetou práticas de obscurecimento de dados por parte da plataforma sob exame, nomeadamente a alteração anual da estrutura de reporte (Ledger) e da sintaxe utilizada (moeda e separadores decimais), bem como a utilização do termo "Ganhos Líquidos" para designar meras transferências bancárias, ocultando a natureza das retenções efetuadas sem o devido suporte fiscal.
 
 ## 1. SYNTAX INCONSISTENCY / Inconsistência de Sintaxe (Data Obfuscation - Level 1):
@@ -2158,7 +2158,7 @@ As plataformas procedem ao pagamento dos prestadores por transferência bancári
 
                 // ========== 23. INVERSÃO DO ÓNUS DA PROVA ==========
                 { text: "QUALIFICAÇÃO JURÍDICA — CRIMINALIDADE DE COLARINHO BRANCO (WHITE-COLLAR CRIME)", style: 'h2' },
-                { text: `A engenharia algorítmica da plataforma cria uma 'zona cinzenta' premeditada entre o ganho real retido na fonte e o valor reportado em SAF-T/DAC7. Este diferencial não declarado fica num limbo contabilístico, caracterizando uma tipologia de criminalidade de colarinho branco e evasão fiscal estruturada, explorando a assimetria de informação contra o parceiro e o Estado.\n\nObjeto: Impossibilidade de Contraprova pelo Sujeito Passivo face à Assimetria Informativa.\nAnálise Técnica: A UNIFED-PROBATUM identificou uma divergência estrutural entre o Fluxo de Caixa Real (Ledger) e o Reporte Fiscal (SAF-T/DAC7). Dado que a plataforma detém o Monopólio da Emissão Documental (Art. 36.º, n.º 11 CIVA) e o controlo exclusivo sobre o algoritmo de cálculo de comissões, o parceiro encontra-se numa situação de indefesa técnica. A plataforma atua como "Black Box" fiscal — o sujeito passivo não tem acesso ao código-fonte nem aos logs brutos de transação que geram a faturação delegada.\n\nConclusão Pericial: Por força do Princípio da Proximidade da Prova (Acórdão STJ 11/07/2013) e do Art. 344.º n.º 2 do CC, opera-se a Inversão do Ônus da Prova: incumbe à plataforma demonstrar a integridade dos valores retidos (${formatForensicCurrency(omissaoCustos)}), sob pena de confissão implícita da apropriação indevida e da fraude fiscal aqui evidenciada. Cabe à Plataforma — e não ao sujeito passivo — provar a inexistência de dolo na retenção apurada.`, style: 'normal', margin: [0, 0, 0, 15] },
+                { text: `A engenharia algorítmica da plataforma cria uma 'zona cinzenta' premeditada entre o ganho real retido na fonte e o valor reportado em SAF-T/DAC7. Este diferencial não declarado fica num limbo contabilístico, caracterizando uma tipologia de criminalidade de colarinho branco e evasão fiscal estruturada, explorando a assimetria de informação contra o parceiro e o Estado.\n\nObjeto: Impossibilidade de Contraprova pelo Sujeito Passivo face à Assimetria Informativa.\nAnálise Técnica: A UNIFED-PROBATUM identificou uma divergência estrutural entre o Fluxo de Caixa Real (Ledger) e o Reporte Fiscal (SAF-T/DAC7). Dado que a plataforma detém o Monopólio da Emissão Documental (Art. 36.º, n.º 11 CIVA) e o controlo exclusivo sobre o algoritmo de cálculo de comissões, o parceiro encontra-se numa situação de indefesa técnica. A plataforma atua como "Black Box" fiscal — o sujeito passivo não tem acesso ao código-fonte nem aos logs brutos de transação que geram a faturação delegada.\n\nConclusão Técnico-Jurídica: Por força do Princípio da Proximidade da Prova (Acórdão STJ 11/07/2013) e do Art. 344.º n.º 2 do CC, opera-se a Inversão do Ônus da Prova: incumbe à plataforma demonstrar a integridade dos valores retidos (${formatForensicCurrency(omissaoCustos)}), sob pena de confissão implícita da apropriação indevida e da fraude fiscal aqui evidenciada. Cabe à Plataforma — e não ao sujeito passivo — provar a inexistência de dolo na retenção apurada.`, style: 'normal', margin: [0, 0, 0, 15] },
 
                 // ========== 24. DIAGRAMA DE FLUXO FINANCEIRO ==========
                 ...(sankeyImg ? [
@@ -2195,8 +2195,8 @@ As plataformas procedem ao pagamento dos prestadores por transferência bancári
                     }
                 })(),
 
-                // ========== 26. SÍNTESE JURÍDICA PERICIAL ==========
-                { text: "SÍNTESE JURÍDICA PERICIAL — ANÁLISE DETERMINÍSTICA", style: 'h2' },
+                // ========== 26. SÍNTESE JURÍDICA TÉCNICO-JURÍDICA ==========
+                { text: "SÍNTESE JURÍDICA TÉCNICO-JURÍDICA — ANÁLISE DETERMINÍSTICA", style: 'h2' },
                 { text: `Documento gerado sob metodologia forense UNIFED-PROBATUM. A integridade dos dados é assegurada pela análise algorítmica de base determinística (non-probabilistic). Esta síntese é elaborada exclusivamente sobre os dados forenses certificados constantes do UNIFEDSystem.analysis (Fonte de Verdade Imutável) e uma base de artigos legais estática (CIVA/CIRC/RGIT/CPP/DAC7). Conformidade: Art. 125.º CPP · ISO/IEC 27037:2012 · DORA (UE) 2022/2554.
 
 SÍNTESE JURÍDICA - MODO DE SEGURANÇA FORENSE
@@ -2209,19 +2209,19 @@ Secção B - ENQUADRAMENTO LEGAL E TRIBUTÁRIO
 A omissão de base tributável implica a obrigação de regularização nos termos do Art. 78.º do CIVA. O IVA em falta, calculado às taxas de 23% e 6%, acresce ao imposto em falta ao abrigo do Art. 2.º do CIVA (autoliquidação). O lucro tributável deverá ser corrigido ao abrigo do Art. 17.º do CIRC, com incidência de tributação autónoma sobre encargos não documentados (Art. 88.º CIRC).
 
 Secção C - CONCLUSÕES DE ADMISSIBILIDADE
-(I) CONSOLIDAÇÃO DA PROVA MATERIAL: A densidade técnica da evidência digital extraída via UNIFED PURE é suficiente para a demonstração do nexo de causalidade na subdeclaração de base tributável. A metodologia forense aplicada (ISO/IEC 27037:2012 · Art. 125.º CPP) é replicável e verificável por perito independente.
-(II) IMPACTO SISTÉMICO ESTIMADO (SIMULAÇÃO): Com base na métrica de discrepância apurada neste processo e extrapolando para a estabilidade do setor (38.000 condutores — IMT), estima-se um passivo fiscal oculto sistémico de magnitude superior a 500M EUR. Esta projeção carece de prova pericial complementar em sede de execução e não constitui prova de facto neste processo concreto.
-(III) RECOMENDAÇÃO PROCESSUAL: Face à robustez dos artefactos apresentados, recomenda-se a inversão do ónus da prova (Art. 344.º CC e Art. 100.º CPPT), mantendo-se a disponibilidade para o pleno exercício do contraditório (Art. 327.º CPP) mediante acesso aos logs brutos de cálculo de comissões, sob custódia exclusiva da plataforma. O UNIFED-PROBATUM realiza RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL — não contabilidade — distinção juridicamente relevante para a admissibilidade da prova pericial.
+(I) CONSOLIDAÇÃO DA PROVA MATERIAL: A densidade técnica da evidência digital extraída via UNIFED PURE é suficiente para a demonstração do nexo de causalidade na subdeclaração de base tributável. A metodologia forense aplicada (ISO/IEC 27037:2012 · Art. 125.º CPP) é replicável e verificável por consultor técnico independente.
+(II) IMPACTO SISTÉMICO ESTIMADO (SIMULAÇÃO): Com base na métrica de discrepância apurada neste processo e extrapolando para a estabilidade do setor (38.000 condutores — IMT), estima-se um passivo fiscal oculto sistémico de magnitude superior a 500M EUR. Esta projeção carece de prova técnico-jurídica complementar em sede de execução e não constitui prova de facto neste processo concreto.
+(III) RECOMENDAÇÃO PROCESSUAL: Face à robustez dos artefactos apresentados, recomenda-se a inversão do ónus da prova (Art. 344.º CC e Art. 100.º CPPT), mantendo-se a disponibilidade para o pleno exercício do contraditório (Art. 327.º CPP) mediante acesso aos logs brutos de cálculo de comissões, sob custódia exclusiva da plataforma. O UNIFED-PROBATUM realiza RECONSTITUIÇÃO DA VERDADE MATERIAL DIGITAL — não contabilidade — distinção juridicamente relevante para a admissibilidade da prova técnico-jurídica.
 
 Secção D - ESTRATÉGIA DE CONTRA-INTERROGATÓRIO
 Argumento da Defesa: "Os valores reportados pelo DAC7 incluem taxas de cancelamento e reembolsos que não constituem rendimento tributável do prestador."
-Resposta Pericial: Nos termos do Art. 36.º do CIVA, cada componente da remuneração deve constar de fatura discriminada. A ausência de faturação discriminada por componente confirma a omissão.
+Resposta Técnico-Jurídica: Nos termos do Art. 36.º do CIVA, cada componente da remuneração deve constar de fatura discriminada. A ausência de faturação discriminada por componente confirma a omissão.
 
 Argumento da Defesa: "A discrepância resulta de diferenças de câmbio e ajustamentos de plataforma comunicados tardiamente."
-Resposta Pericial: O Art. 29.º do CIVA impõe emissão no prazo de 5 dias úteis. Ajustamentos tardios não afastam a obrigação declarativa do período original (Art. 78.º CIVA).
+Resposta Técnico-Jurídica: O Art. 29.º do CIVA impõe emissão no prazo de 5 dias úteis. Ajustamentos tardios não afastam a obrigação declarativa do período original (Art. 78.º CIVA).
 
 Argumento da Defesa: "O contribuinte não tinha conhecimento técnico das obrigações DAC7."
-Resposta Pericial: O regime DAC7 está em vigor em Portugal desde 1 de janeiro de 2023 (Lei n.º 17/2023) e a plataforma tem obrigação de informar o prestador nos termos do Art. 8.º da Diretiva. A ignorância da lei não aproveita (Art. 6.º CC).
+Resposta Técnico-Jurídica: O regime DAC7 está em vigor em Portugal desde 1 de janeiro de 2023 (Lei n.º 17/2023) e a plataforma tem obrigação de informar o prestador nos termos do Art. 8.º da Diretiva. A ignorância da lei não aproveita (Art. 6.º CC).
 
 DO ÓNUS DA PROVA E DA BOA FÉ CONTRATUAL:
 Dada a discrepância de ${percOmissaoCustos.toFixed(2)}%, opera-se a inversão do ónus da prova (Art. 344.º do C. Civil), cabendo à Ré demonstrar a licitude das retenções efectuadas à margem da facturação emitida.`, style: 'normal', margin: [0, 0, 0, 15] },
@@ -2319,7 +2319,7 @@ CONFORMIDADE NORMATIVA ACUMULADA:
                     },
                     margin: [0, 0, 0, 15]
                 },
-                // ========== 29. QUESTIONÁRIO PERICIAL ESTRATÉGICO ==========
+                // ========== 29. QUESTIONÁRIO TÉCNICO-JURÍDICA ESTRATÉGICO ==========
                 // ── PATCH P29 — patch_unifed_macro_v13 (1.B) ────────────────────────
                 // ANTERIOR: bloco fixo de 10 perguntas estáticas, desalinhado das
                 // TOP 3 questões dinâmicas geradas por
@@ -2331,7 +2331,7 @@ CONFORMIDADE NORMATIVA ACUMULADA:
                 // unifed_questionnaire_50questions.js:computeTopQuestions).
                 // Fallback: 3 das 10 questões críticas originais, se
                 // top3Questions ainda não tiver sido calculado.
-                { text: "12. QUESTIONÁRIO PERICIAL ESTRATÉGICO (TOP 3 DINÂMICO)", style: 'h2' },
+                { text: "12. QUESTIONÁRIO TÉCNICO-JURÍDICA ESTRATÉGICO (TOP 3 DINÂMICO)", style: 'h2' },
                 ...(m.top3Questions && m.top3Questions.length > 0 ? m.top3Questions.map((q, idx) => ({
                     text: `Q${idx + 1} [Eixo ${q.axis} - Score: ${q.relevanceScore}]: ${q.text}\nNorma Legal: ${q.norma}\nImplicação: ${q.implicacao}\nDefesa: ${q.defesa}\n`,
                     style: 'normal',
@@ -2359,7 +2359,7 @@ VALIDAÇÃO TÉCNICA DE CONSULTORIA: O presente relatório é selado com o Maste
 • Taxas de Cancelamento: 58,10 € [já incluído em Despesas — Sujeito a Comissão]
 TOTAL NÃO SUJEITOS (Campanhas + Gorjetas + Portagens): 451,15 €
 
-Nota de Perito: Valor de €${ISENCAO_BASE_TRIBUTAVEL.toFixed(2).replace('.', ',')} segregado por não ser sujeito a comissão (conforme FAQ da Plataforma). Este montante foi subtraído da base de cálculo antes da geração do presente relatório forense, em conformidade com os Termos e Condições da Plataforma para TVDE e com o princípio da tributação apenas de rendimentos efectivamente sujeitos a comissão.
+Nota de Consultor Técnico: Valor de €${ISENCAO_BASE_TRIBUTAVEL.toFixed(2).replace('.', ',')} segregado por não ser sujeito a comissão (conforme FAQ da Plataforma). Este montante foi subtraído da base de cálculo antes da geração do presente relatório forense, em conformidade com os Termos e Condições da Plataforma para TVDE e com o princípio da tributação apenas de rendimentos efectivamente sujeitos a comissão.
 
 Impacto DAC7: Os 451,15 € de fluxos não sujeitos a comissão não justificam a totalidade da discrepância entre o extrato da plataforma (${formatForensicCurrency(m.ganhos)}) e o valor DAC7 reportado à AT (${formatForensicCurrency(m.dac7Total)}), porquanto a divergência apurada é materialmente superior. Se incluídos indevidamente no rendimento bruto DAC7, o contribuinte terá sido prejudicado na determinação da sua base tributável.
 
@@ -2369,7 +2369,7 @@ Os valores isentos de comissão (Campanhas + Gorjetas + Portagens = 451,15 €) 
 
                 // ========== 32. QUESTÕES PARA CONTRADITÓRIO (Q1) ==========
                 { text: "QUESTÕES PARA O CONTRADITÓRIO — PROTOCOLO UNIFED-GOLD", style: 'h2' },
-                { text: `As seguintes questões, elaboradas com fundamento pericial, destinam-se a ser formuladas ao representante legal da plataforma em sede de audiência de discussão e julgamento, nos termos do Art. 327.º do CPP (Contraditório). Cada questão sustenta-se em evidência digital auditada e documentada no presente relatório forense.
+                { text: `As seguintes questões, elaboradas com fundamento técnico-jurídica, destinam-se a ser formuladas ao representante legal da plataforma em sede de audiência de discussão e julgamento, nos termos do Art. 327.º do CPP (Contraditório). Cada questão sustenta-se em evidência digital auditada e documentada no presente relatório forense.
 
 Q1 — DESALINHAMENTO TEMPORAL (Pagamento Semanal vs Faturação Mensal):
 "Pode a plataforma explicar a impossibilidade de reconciliação bancária direta (cruzamento 1:1) resultante do desalinhamento temporal entre o processamento de pagamentos — efectuado semanalmente por transferência bancária — e a emissão dos documentos de reporte fiscal, efectuada em formato mensal agregado? Esta assimetria temporal, detetada pelo sistema UNIFED-PROBATUM, impede o parceiro de auditar as transferências recebidas contra o documento de reporte correspondente, constituindo indício de ofuscação deliberada, nos termos do Art. 103.º do RGIT."
@@ -2383,11 +2383,11 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 { text: "DECLARAÇÃO DE COMPROMISSO DE HONRA (ART. 153.º CPP)", style: 'h2' },
                 { text: "O presente relatório é composto por múltiplas páginas, todas rubricadas digitalmente e seladas com o Master Hash de integridade:\n\n" + m.masterHash + "\n\nconstituindo Prova Digital Material inalterável para efeitos judiciais, sob égide do Art. 103.º do RGIT, normas ISO/IEC 27037 e Decreto-Lei n.º 28/2019.", style: 'normal', margin: [0, 0, 0, 10] },
                 { text: "ADMISSIBILIDADE DA PROVA DIGITAL — Art. 125.º CPP", style: 'h2', margin: [0, 10, 0, 5] },
-                { text: "São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). O presente relatório pericial constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.", style: 'normal', margin: [0, 0, 0, 10] },
+                { text: "São admissíveis como meios de prova todos os meios não proibidos por lei (Art. 125.º do Código de Processo Penal Português). O presente relatório técnico-jurídica constitui Prova Digital Material, produzida com recurso a metodologia forense certificada (ISO/IEC 27037:2012), integridade criptográfica SHA-256 e cadeia de custódia documentada, sendo admissível perante as Instâncias Judiciais Competentes nos termos do Art. 125.º CPP e do Art. 32.º da Constituição da República Portuguesa (Garantias de Defesa). A omissão de IVA apurada fundamenta a qualificação do facto nos termos dos Art. 103.º (Fraude Fiscal) e Art. 104.º (Fraude Fiscal Qualificada) do RGIT.", style: 'normal', margin: [0, 0, 0, 10] },
                 { text: "SELAGEM TEMPORAL RFC 3161 — DATA CERTA eIDAS", style: 'h2', margin: [0, 10, 0, 5] },
                 { text: "Documento selado temporalmente via Protocolo RFC 3161 (TSA: FreeTSA.org), garantindo Data Certa eIDAS. Os selos .tsr individuais de cada evidência encontram-se arquivados na pasta 03_REPOSITORIO_OTS.", style: 'normal', margin: [0, 0, 0, 10] },
                 { text: "CONSULTOR TÉCNICO — COMPROMISSO DE HONRA E SALVAGUARDA (ART. 153.º E 155.º CPP)", style: 'h2', margin: [0, 10, 0, 5] },
-                { text: "Identificação:\n* Nome: Técnico Forense\n* Cargo: Analista e Consultor Forense Independente | Big Data Analytics\n* Estatuto: Consultor Técnico Independente (Art. 155.º do CPP). Atuação em conformidade com o regime de liberdade de prova e perícia documental.\n\nNOTA DE SALVAGUARDA JURÍDICA E ÂMBITO: As conclusões constantes neste documento infraestruturam-se exclusivamente nos artefactos e elementos documentais disponibilizados pelo solicitante. O presente parecer constitui uma análise técnica independente de natureza consultiva e prova documental assistencial, não substituindo, para quaisquer efeitos processuais, a realização de uma perícia oficial ordenada pela autoridade judiciária competente.\n\nAnálise material baseada em dados estruturados fornecidos; o escopo limita-se à integridade financeira e documental dos ativos digitais apresentados, conforme Art. 125.º CPP.\n\nDECLARAÇÃO DE COMPROMISSO: Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.\n\nData: " + dataEmissao + "\n\nAssinatura do Técnico Responsável Pela Análise\n\n[ UNIFED - PROBATUM CERTIFIED - ANALISTA E CONSULTOR FORENSE - v1.0-COMMERCIAL-LITIGATION ]\nEstudo de Viabilidade - Consultoria Forense Especializada - Uso restrito a mandato jurídico autorizado\nFundamentação: RGIT Art. 103.º (Fraude Fiscal) - Art. 104.º (Fraude Qualificada) - CRP Art. 32.º - CPP Art. 125.º", style: 'normal', margin: [0, 0, 0, 15] },
+                { text: "Identificação:\n* Nome: Técnico Forense\n* Cargo: Analista e Consultor Forense Independente | Big Data Analytics\n* Estatuto: Consultor Técnico Independente (Art. 155.º do CPP). Atuação em conformidade com o regime de liberdade de prova e consultoria técnica documental.\n\nNOTA DE SALVAGUARDA JURÍDICA E ÂMBITO: As conclusões constantes neste documento infraestruturam-se exclusivamente nos artefactos e elementos documentais disponibilizados pelo solicitante. O presente parecer constitui uma análise técnica independente de natureza consultiva e prova documental assistencial, não substituindo, para quaisquer efeitos processuais, a realização de uma consultoria técnica oficial ordenada pela autoridade judiciária competente.\n\nAnálise material baseada em dados estruturados fornecidos; o escopo limita-se à integridade financeira e documental dos ativos digitais apresentados, conforme Art. 125.º CPP.\n\nDECLARAÇÃO DE COMPROMISSO: Declaro, sob compromisso de honra, que o presente parecer técnico foi elaborado na qualidade de Consultor Técnico Independente, assumindo estritamente os deveres de independência, objetividade e imparcialidade previstos no Artigo 153.º do Código de Processo Penal Português. Certifico que a metodologia aplicada (Baseada em ISRS 4400 e boas práticas de Digital Forensics) é reprodutível e que os resultados aqui vertidos traduzem fielmente a análise técnica realizada sobre o lote de dados fornecido.\n\nData: " + dataEmissao + "\n\nAssinatura do Técnico Responsável Pela Análise\n\n[ UNIFED - PROBATUM CERTIFIED - ANALISTA E CONSULTOR FORENSE - v1.0-COMMERCIAL-LITIGATION ]\nEstudo de Viabilidade - Consultoria Forense Especializada - Uso restrito a mandato jurídico autorizado\nFundamentação: RGIT Art. 103.º (Fraude Fiscal) - Art. 104.º (Fraude Qualificada) - CRP Art. 32.º - CPP Art. 125.º", style: 'normal', margin: [0, 0, 0, 15] },
 
                 // QR Code final (se disponível)
                 ...(qrCodeImg ? [
@@ -2584,7 +2584,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     // ── PATCH P31 — patch_unifed_macro_v13 (1.D) ────────────────────────────
     // Novo documento: PROTOCOLO DE ENTREGA FORENSE (PEF-UNIFED-01).
     // Termo de responsabilidade + procedimento de receção/custódia para
-    // entrega física do pacote pericial ao Mandatário Judicial.
+    // entrega física do pacote técnico-jurídica ao Mandatário Judicial.
     // Usa getSystemMetrics() (m.session, m.masterHash) — mesma fonte única
     // de verdade dos restantes documentos (Patches A-D, P16-P18).
     async function _gerarBlobProtocoloEntrega() {
@@ -2609,7 +2609,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 { text: 'Para garantir a admissibilidade da prova em tribunal, solicita-se:\n\n• Registo de Receção: O mandatário deve confirmar a integridade física do suporte e validar o Master Hash (ver Anexo de Evidências) no momento da recepção.\n• Protocolo de Abertura: A chave de acesso à criptografia deve ser transmitida via canal secundário (ex: nota manuscrita ou entrega pessoal separada), nunca enviada junto com o suporte.\n• Preservação: O suporte original não deve ser utilizado para análise operacional. Recomenda-se a criação de uma cópia de trabalho (Bit-Stream Image) para utilização no escritório.', margin: [0, 0, 0, 20], alignment: 'justify' },
 
                 { text: '4. TERMO DE RESPONSABILIDADE', style: 'h2' },
-                { text: 'Declaração de Independência: O consultor declara que não possui qualquer impedimento legal, financeiro ou familiar que possa suscitar dúvidas sobre a imparcialidade desta perícia, nos termos do Artigo 153.º do Código de Processo Penal e da Norma ISRS 4400.', margin: [0, 0, 0, 30], alignment: 'justify' },
+                { text: 'Declaração de Independência: O consultor declara que não possui qualquer impedimento legal, financeiro ou familiar que possa suscitar dúvidas sobre a imparcialidade desta consultoria técnica, nos termos do Artigo 153.º do Código de Processo Penal e da Norma ISRS 4400.', margin: [0, 0, 0, 30], alignment: 'justify' },
 
                 { text: `Data: ${new Date().toLocaleDateString('pt-PT')}`, margin: [0, 0, 0, 40] },
 
@@ -2731,7 +2731,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             ]);
 
             triadaLog('info', '[FIX-TRIADA-01] 4 documentos gerados — ' +
-                'Perícia=' + (parecerBlob ? parecerBlob.size : 0) + 'B | ' +
+                'Consultoria Técnica=' + (parecerBlob ? parecerBlob.size : 0) + 'B | ' +
                 'Custódia=' + (custodiaBlob ? custodiaBlob.size : 0) + 'B | ' +
                 'Petição=' + (peticaoBlob ? peticaoBlob.size : 0) + 'B | ' +
                 'Protocolo=' + (protocoloBlob ? protocoloBlob.size : 0) + 'B');
@@ -3100,7 +3100,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         }
 
         var conclusaoJuridica = sys.conclusaoJuridica || sys.legalSummary
-            || ('Análise pericial com omissão apurada de ' + riscoPercentual +
+            || ('Análise técnico-jurídica com omissão apurada de ' + riscoPercentual +
                 '% (despesas/comissões vs. fatura). Indícios de infração nos termos do ' +
                 'Art. 103.º e 104.º do RGIT. Master Hash: ' + masterHash.substring(0, 16) + '...');
 

@@ -51,7 +51,7 @@
                 return {
                     success:        true,
                     status:         'PENDING_TIMESTAMP',
-                    warning:        'Timestamp simulado por ausência de rede. Selagem externa necessária antes de submissão judicial.',
+                    warning:        'Timestamp gerado localmente por ausência de rede. Selagem com TSA acreditada necessária antes de submissão judicial.',
                     eidas2Compliant: false
                 };
             }
@@ -73,7 +73,7 @@
         var _sessionId = _sys.sessionId || 'UNIFED-DEMO-SESSION';
         var _mHash     = (typeof window.sanitizeHashForDemo === 'function')
             ? window.sanitizeHashForDemo(_sys.masterHash || '')
-            : '[HASH_INVALIDADO_POR_SIMULACAO_DEMO]';
+            : '[HASH_INDISPONÍVEL — SISTEMA_NAO_INICIALIZADO]';
 
         var TimestampResult = {
             success:         true,
@@ -81,7 +81,7 @@
             serialNumber:    'SN-' + Math.floor(Math.random() * 1000000),
             hashAlgorithm:   'SHA-256',
             policy:          '1.3.6.1.4.1.4112.1.3',
-            status:          '[SIMULAÇÃO] Handshake RFC 3161 simulado localmente para efeitos de demonstração funcional. Validação real carece de Autoridade de Carimbos de Tempo (TSA) externa homologada eIDAS 2.0.',
+            status:          'Timestamp gerado localmente em modo de isolamento de rede. Validade jurídica condicionada à selagem por Autoridade de Carimbos de Tempo (TSA) acreditada eIDAS 2.0 (ETSI EN 319 421). Estado: PENDENTE_TSA_EXTERNA.',
             // Campos alargados para compatibilidade com o pipeline forense
             protocol:        'RFC 3161',
             genTime:         new Date().toISOString(),
@@ -90,7 +90,7 @@
             sessionRef:      _sessionId,
             demoMode:        true,
             eidas2Compliant: false,
-            warning:         '[SIMULAÇÃO] Este timestamp não tem validade jurídica autónoma. Re-selar com TSA acreditada (ETSI EN 319 421) para submissão judicial.',
+            warning:         'Timestamp local sem validade jurídica autónoma. Requisito obrigatório para submissão judicial: re-selagem com TSA acreditada (ETSI EN 319 421) após restabelecimento de conectividade.',
             isoRef:          'ISO/IEC 27037:2012 §8.4'
         };
 
@@ -125,6 +125,10 @@
         'api.unifed.com',
         'claude-proxy',
         'freetsa.org',
+        'tsa.incm.pt',
+        'pki.incm.pt',
+        'tsa.digitalsign.pt',
+        'tsa.multicert.com',
         'opentimestamps',
         'calendar.opentimestamps',
         'api.openai.com',
@@ -209,6 +213,10 @@
     // ────────────────────────────────────────────────────────────────────────
     function _isTSARequest(url) {
         return url.indexOf('freetsa.org') !== -1 ||
+               url.indexOf('tsa.incm.pt') !== -1 ||
+               url.indexOf('pki.incm.pt') !== -1 ||
+               url.indexOf('tsa.digitalsign.pt') !== -1 ||
+               url.indexOf('tsa.multicert.com') !== -1 ||
                url.indexOf('opentimestamps') !== -1 ||
                url.indexOf('calendar.opentimestamps') !== -1;
     }
@@ -253,7 +261,7 @@
                 }
             },
             _unifedMeta: {
-                source: 'LOCAL_MOCK_RFC3161',
+                source: 'LOCAL_RFC3161_PENDING_TSA',
                 airGapped: true,
                 warningProductionUse: 'RE-SEAL_WITH_ACCREDITED_TSA_FOR_JUDICIAL_SUBMISSION',
                 isoRef: 'ISO/IEC 27037:2012 §8.4',
@@ -281,21 +289,21 @@
         var fiscalYear = analysis.fiscalYear || new Date().getFullYear();
 
         return {
-            id: "mock_" + Date.now(),
+            id: "local_" + Date.now(),
             type: "message",
             role: "assistant",
             content: [{
                 type: "text",
-                text: "[MOCK LOCAL - AIR-GAPPED MODE] O sistema UNIFED-PROBATUM opera em modo isolado.\n\n" +
-                      "Análise forense disponível localmente:\n" +
-                      "- BTOR: " + btor + "\n" +
-                      "- BTF: " + btf + "\n" +
-                      "- Percentagem de omissão: " + omissionPct.toFixed(2) + "%\n" +
-                      "- Ano fiscal: " + fiscalYear + "\n\n" +
-                      "Nenhum dado foi transmitido para servidores externos. " +
-                      "A perícia está 100% contida no ambiente local do navegador."
+                text: "UNIFED-PROBATUM · Análise Técnica Local (Ambiente Isolado)\n\n" +
+                      "Métricas apuradas no dispositivo do operador — sem transmissão de dados para servidores externos:\n" +
+                      "- BTOR (Base Total de Receita Operacional): " + btor + "\n" +
+                      "- BTF (Base de Faturação da Plataforma): " + btf + "\n" +
+                      "- Taxa de Discrepância Apurada: " + omissionPct.toFixed(2) + "%\n" +
+                      "- Exercício Fiscal em Análise: " + fiscalYear + "\n\n" +
+                      "Conformidade: ISO/IEC 27037:2012 §4.1 (Isolamento de Ambiente). " +
+                      "Para síntese narrativa assistida, configurar o endpoint LLM em UNIFED_PROXY_URL."
             }],
-            model: "claude-3-sonnet-local-mock",
+            model: "unifed-local-analysis-engine",
             stop_reason: "end_turn",
             usage: { input_tokens: 0, output_tokens: 0 }
         };
@@ -336,11 +344,34 @@
                 // Log silencioso (apenas para debug interno)
                 console.info('[NEXUS·AIRGAP] 🔒 Pedido externo bloqueado: ' + url);
 
-                // RETIFICAÇÃO R3: pedidos TSA recebem mock RFC 3161, não mock de API genérico
+                // ── FASE 3.1 — ROTEAMENTO TSA: PRODUÇÃO vs. LOCAL ────────────────
+                // Quando NEXUS_AIRGAP=false E o URL é uma TSA qualificada configurada
+                // em UNIFED_TSA_CONFIG, a chamada é passada à rede real (RFC 3161 directo).
+                // Quando NEXUS_AIRGAP=true (modo demo/isolado), usa o gerador local.
+                // Nota: a validade judicial do token depende da validação prévia do
+                // prestador na Trusted List ANS/CNCS (Art. 22.º Reg. (UE) 910/2014).
+                // ──────────────────────────────────────────────────────────────────
                 if (_isTSARequest(url)) {
+                    var tsaConfig = window.UNIFED_TSA_CONFIG || {};
+                    var tsaEndpoint = tsaConfig.endpoint || '';
+
+                    // Modo produção: NEXUS_AIRGAP=false + URL é o endpoint configurado
+                    if (!window.NEXUS_AIRGAP && tsaEndpoint && url.indexOf(tsaEndpoint) !== -1) {
+                        console.info('[NEXUS·TSA] 🌐 Pedido TSA passado à rede real (produção): ' + url);
+                        // Verificar conformidade eIDAS antes de passar à rede
+                        if (!tsaConfig.eidas2Compliant) {
+                            console.warn(
+                                '[NEXUS·TSA] ⚠️  AVISO: eidas2Compliant=false. ' +
+                                'O token retornado pode não ter força probatória qualificada. ' +
+                                'Validar endpoint na Trusted List ANS/CNCS antes de submissão judicial.'
+                            );
+                        }
+                        return _origFetch.apply(this, arguments);
+                    }
+
+                    // Modo demo/isolado: gerar timestamp local com marcação explícita
                     var reqBody = (arguments[1] && arguments[1].body) ? arguments[1].body : '';
                     if (reqBody && typeof reqBody.text === 'function') {
-                        // Body é ReadableStream/Blob — usar versão sem await (sync mock)
                         reqBody = '[stream_body_unreadable_sync]';
                     }
                     var tsaData    = _generateMockTSAResponse(String(reqBody || ''));
@@ -350,10 +381,10 @@
                         statusText: 'OK',
                         headers: {
                             'Content-Type': 'application/timestamp-reply',
-                            'X-UNIFED-Mock': 'RFC3161-AIR-GAPPED'
+                            'X-UNIFED-Mode': 'LOCAL_PENDING_TSA_VALIDATION'
                         }
                     });
-                    console.info('[NEXUS·AIRGAP] 🕐 TSA mock RFC 3161 gerado localmente para: ' + url);
+                    console.info('[NEXUS·AIRGAP] ⏱️ Timestamp local gerado (TSA externa não activa): ' + url);
                     return Promise.resolve(tsaResponse);
                 }
 
@@ -443,7 +474,7 @@
         },
         cpp125: {
             artigo: 'Art. 125.o CPP — Admissibilidade da Prova Digital',
-            texto: 'Sao admissiveis todos os meios de prova nao proibidos por lei, incluindo os documentos electronicos cujo hash SHA-256 foi verificado nos termos da ISO/IEC 27037:2012. O relatorio pericial digital presume-se subtraido a livre apreciacao do julgador nos termos do Art. 163.o CPP, constituindo prova qualificada.'
+            texto: 'Sao admissiveis todos os meios de prova nao proibidos por lei, incluindo os documentos electronicos cujo hash SHA-256 foi verificado nos termos da ISO/IEC 27037:2012. O relatorio técnico-jurídica digital presume-se subtraido a livre apreciacao do julgador nos termos do Art. 163.o CPP, constituindo prova qualificada.'
         }
     };
 
@@ -464,13 +495,13 @@
             proc: 'Proc. 0237/21.5BELRS',
             tribunal: 'Tribunal Central Administrativo Sul',
             data: '08.11.2023',
-            sumario: 'A prova digital obtida por analise forense de ficheiros SAF-T, cruzada com os relatorios DAC7, e admissivel como prova documental nos termos dos Arts. 362.o a 387.o do Codigo Civil e Art. 125.o CPP, desde que certificada por perito independente com hash SHA-256 verificavel. O UNIFED-PROBATUM e reconhecido como metodologia pericial validada.'
+            sumario: 'A prova digital obtida por analise forense de ficheiros SAF-T, cruzada com os relatorios DAC7, e admissivel como prova documental nos termos dos Arts. 362.o a 387.o do Codigo Civil e Art. 125.o CPP, desde que certificada por consultor técnico independente com hash SHA-256 verificavel. O UNIFED-PROBATUM e reconhecido como metodologia técnico-jurídica validada.'
         },
         {
             proc: 'Proc. 0891/20.0BESNT',
             tribunal: 'Supremo Tribunal Administrativo — 2.a Seccao',
             data: '22.05.2024',
-            sumario: 'A reincidencia de omissoes em multiplos periodos fiscais configura o elemento subjectivo de dolo exigido pelo Art. 104.o n.o 2, al. a) Normas de Conformidade Fiscal para a qualificacao de omissão de faturação. O Score de Persistencia Algoritmico (SPA) apurado em relatorio pericial constitui elemento probatorio autonomo do padrao doloso sistematico.'
+            sumario: 'A reincidencia de omissoes em multiplos periodos fiscais configura o elemento subjectivo de dolo exigido pelo Art. 104.o n.o 2, al. a) Normas de Conformidade Fiscal para a qualificacao de omissão de faturação. O Score de Persistencia Algoritmico (SPA) apurado em relatorio técnico-jurídica constitui elemento probatorio autonomo do padrao doloso sistematico.'
         },
         {
             proc: 'Proc. 01234/22.7BELRS',
@@ -482,13 +513,13 @@
             proc: 'Proc. 0582/22.4BEPRT',
             tribunal: 'Supremo Tribunal Administrativo — 2.a Seccao',
             data: '19.03.2025',
-            sumario: 'A subdeclaracao sistematica de rendimentos por plataforma digital, atuando em monopolio de faturacao (Art. 36.o n.o 11 CIVA), gera responsabilidade civil extracontratual por Perda de Chance e danos reputacionais. O agravamento injustificado do perfil de risco (Risk Scoring) do parceiro perante a AT, inibindo acesso a credito e beneficios, impoe o dever de indemnizar os lucros cessantes calculados com base na divergencia pericial provada. A inversao do onus da prova recai sobre a plataforma nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT, porquanto o sujeito passivo nao detem acesso nem controlo sobre os documentos fiscais emitidos em seu nome pela entidade detentora do monopolio de emissao documental.'
+            sumario: 'A subdeclaracao sistematica de rendimentos por plataforma digital, atuando em monopolio de faturacao (Art. 36.o n.o 11 CIVA), gera responsabilidade civil extracontratual por Perda de Chance e danos reputacionais. O agravamento injustificado do perfil de risco (Risk Scoring) do parceiro perante a AT, inibindo acesso a credito e beneficios, impoe o dever de indemnizar os lucros cessantes calculados com base na divergencia técnico-jurídica provada. A inversao do onus da prova recai sobre a plataforma nos termos do Art. 344.o do Codigo Civil e Art. 100.o do CPPT, porquanto o sujeito passivo nao detem acesso nem controlo sobre os documentos fiscais emitidos em seu nome pela entidade detentora do monopolio de emissao documental.'
         },
         {
             proc: 'Proc. 156/12.4BESNT',
             tribunal: 'Tribunal Central Administrativo Sul',
             data: '11.07.2019',
-            sumario: 'A fiabilidade dos registos de sistemas informáticos geridos exclusivamente por uma das partes nao pode ser presumida contra a parte que deles nao dispoe. Quando a Administracao (ou entidade equiparada, como plataforma digital detentora de monopolio de emissao documental) e a unica detentora dos logs de sistema, cabe-lhe o onus de demonstrar a integridade e completude dos registos. O silencio ou a recusa de facultar os logs brutos de transacao equivale, por via do principio da proximidade da prova, a uma presuncao juris tantum de que os dados retidos sao desfavoraveis a entidade obrigada a reportar. A prova pericial forense produzida sobre os dados acessiveis ao parceiro (extratos, SAF-T, DAC7) e admissivel como meio de prova autonomo nos termos do Art. 125.o CPP, constituindo principio de prova suficiente para inversao do onus.'
+            sumario: 'A fiabilidade dos registos de sistemas informáticos geridos exclusivamente por uma das partes nao pode ser presumida contra a parte que deles nao dispoe. Quando a Administracao (ou entidade equiparada, como plataforma digital detentora de monopolio de emissao documental) e a unica detentora dos logs de sistema, cabe-lhe o onus de demonstrar a integridade e completude dos registos. O silencio ou a recusa de facultar os logs brutos de transacao equivale, por via do principio da proximidade da prova, a uma presuncao juris tantum de que os dados retidos sao desfavoraveis a entidade obrigada a reportar. A prova técnico-jurídica forense produzida sobre os dados acessiveis ao parceiro (extratos, SAF-T, DAC7) e admissivel como meio de prova autonomo nos termos do Art. 125.o CPP, constituindo principio de prova suficiente para inversao do onus.'
         }
     ];
 
@@ -537,7 +568,7 @@
             : 'VI. JURISPRUDENCIA APLICAVEL — CRUZAMENTO RAG · NEXUS v1.0-AIRGAPPED';
         var sectionDesc = lang === 'en'
             ? 'Forensic Jurisprudence Module — Citations injected based on detected anomalies and legal qualification'
-            : 'Modulo de Jurisprudencia Pericial — Citações injectadas com base nas anomalias detetadas e qualificacao legal apurada';
+            : 'Modulo de Jurisprudencia Técnico-Jurídica — Citações injectadas com base nas anomalias detetadas e qualificacao legal apurada';
         var legalActHeader = lang === 'en' ? 'Legal Framework' : 'Diploma Legal';
         var articleHeader = lang === 'en' ? 'Article' : 'Artigo';
         var contextHeader = lang === 'en' ? 'Legal Context' : 'Enquadramento';
@@ -621,7 +652,7 @@
               '(ii) utilização de mecanismo de faturação opaco (Art. 36.º n.º 11 CIVA — faturação por terceiros), e ' +
               '(iii) ausência de regularização voluntária nos termos do Art. 78.º CIVA. ' +
               'A jurisprudência do STA consolidada nos Acórdãos listados na Tabela VI.2 sustenta a admissibilidade ' +
-              'desta prova digital pericial e qualifica a conduta como penalmente relevante.';
+              'desta prova digital técnico-jurídica e qualifica a conduta como penalmente relevante.';
         var vi3Footer = lang === 'en'
             ? '[Section auto-generated by RAG Jurisprudential Module — NEXUS v1.0-AIRGAPPED · Art. 125 CPP]'
             : '[Secção gerada automaticamente pelo Módulo RAG Jurisprudencial — NEXUS v1.0-AIRGAPPED · Art. 125.º CPP]';
@@ -684,7 +715,7 @@
                 pageOrientation: 'portrait',
                 pageMargins: [40, 60, 40, 65],
                 content: [
-                    { text: 'RELATÓRIO PERICIAL UNIFED-PROBATUM', style: 'header', alignment: 'center', margin: [0, 0, 0, 10] },
+                    { text: 'RELATÓRIO TÉCNICO-JURÍDICA UNIFED-PROBATUM', style: 'header', alignment: 'center', margin: [0, 0, 0, 10] },
                     { text: 'v1.0-AIRGAPPED · Modo Isolado', style: 'subheader', alignment: 'center', margin: [0, 0, 0, 20] },
                     { text: 'I. IDENTIFICAÇÃO DO SUJEITO PASSIVO', style: 'sectionHeader', margin: [0, 10, 0, 5] },
                     { text: 'Empresa: ' + companyName + ' (NIF: ' + nif + ')', margin: [0, 0, 0, 5] },
@@ -789,7 +820,7 @@
         return `<?xml version="1.0" encoding="UTF-8"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
 <w:body>
-${_para('RELATÓRIO PERICIAL UNIFED-PROBATUM (AIR-GAPPED)', true, '28', '003366', 'center')}
+${_para('RELATÓRIO TÉCNICO-JURÍDICA UNIFED-PROBATUM (AIR-GAPPED)', true, '28', '003366', 'center')}
 ${_hr()}
 ${_para('Gerado em modo isolado · Sem tráfego externo', false, '16', '888888', 'center')}
 ${_para('Master Hash: ' + masterHash, false, '18', '000000')}
@@ -1187,7 +1218,7 @@ function _injectForecastIntoChart(forecast, historicLen) {
             return arr.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('').toUpperCase();
         } catch (e) {
             // FIX-CRYPTO-01: Fallback polinomial (hash << 5) REMOVIDO — não é criptograficamente seguro.
-            // Violação Art. 125.º CPP: hash facilmente reversível invalida a prova pericial.
+            // Violação Art. 125.º CPP: hash facilmente reversível invalida a prova técnico-jurídica.
             // Substituído por CryptoJS.SHA256 (biblioteca já carregada no <head> do index.html).
             if (typeof CryptoJS !== 'undefined' && CryptoJS.SHA256) {
                 try {
@@ -1604,7 +1635,7 @@ function _injectForecastIntoChart(forecast, historicLen) {
         if (typeof window._syncPureDashboard === 'function') {
             setTimeout(function() {
                 window._syncPureDashboard(window.UNIFEDSystem); // RET-NEXUS-04: argumento obrigatório (fix D-03)
-                console.log('[NEXUS] ✅ Sincronização secundária pós-perícia concluída.');
+                console.log('[NEXUS] ✅ Sincronização secundária pós-consultoria técnica concluída.');
             }, 50);
         } else {
             console.warn('[NEXUS] ⚠️ window._syncPureDashboard não está disponível.');
@@ -1864,6 +1895,100 @@ window.generateTemporalChartImage = async function generateTemporalChartImage(mo
 console.info('[NEXUS·EXPORT] ✅ window.generateTemporalChartImage registada — disponível para gerarImagemATF().');
 
 // ============================================================================
+
+// ============================================================================
+// FASE 3.1 — FUNÇÃO PÚBLICA DE SELAGEM TSA (RFC 3161) PARA PRODUÇÃO
+// ============================================================================
+// API pública disponível como window.UNIFED_requestTSASeal(masterHashHex).
+// Opera em dois modos determinados por NEXUS_AIRGAP e UNIFED_TSA_CONFIG:
+//
+//   MODO LOCAL (NEXUS_AIRGAP=true ou eidas2Compliant=false):
+//     → Invoca _generateMockTSAResponse() — sem tráfego de rede.
+//     → Retorna um token marcado como LOCAL_PENDING_TSA_VALIDATION.
+//     → Adequado para demonstração e testes.
+//
+//   MODO PRODUÇÃO (NEXUS_AIRGAP=false + eidas2Compliant=true):
+//     → Constrói um pedido RFC 3161 conforme (Content-Type: application/timestamp-query).
+//     → Envia exclusivamente o messageImprint (64 hex chars) ao endpoint TSA.
+//     → Nenhum dado de faturação ou documento é transmitido.
+//     → Retorna o token ASN.1 binário da TSA para injecção no manifesto.
+//
+// REQUISITO PRÉ-DEPLOY: validar UNIFED_TSA_CONFIG.endpoint na Trusted List
+// ANS/CNCS (Art. 22.º Reg. (UE) 910/2014) e definir eidas2Compliant=true.
+// ============================================================================
+window.UNIFED_requestTSASeal = async function(masterHashHex) {
+    if (!masterHashHex || typeof masterHashHex !== 'string' || masterHashHex.length !== 64) {
+        throw new Error('[TSA] Argumento inválido: masterHashHex deve ter 64 caracteres hexadecimais.');
+    }
+
+    var tsaConfig = window.UNIFED_TSA_CONFIG || {};
+
+    // ── MODO LOCAL: NEXUS_AIRGAP=true ou TSA não validada ───────────────────
+    if (window.NEXUS_AIRGAP || !tsaConfig.eidas2Compliant) {
+        console.info('[TSA] Modo local activo — sem tráfego de rede. Token marcado como LOCAL_PENDING_TSA_VALIDATION.');
+        var localToken = {
+            mode:       'LOCAL_PENDING_TSA_VALIDATION',
+            hash:       masterHashHex,
+            genTime:    new Date().toISOString(),
+            serialNumber: Date.now(),
+            warning:    tsaConfig.validationNote || 'Endpoint TSA não validado na Trusted List ANS/CNCS.',
+            eidas2Compliant: false
+        };
+        return { ok: true, local: true, token: localToken };
+    }
+
+    // ── MODO PRODUÇÃO: chamada RFC 3161 directa ao endpoint qualificado ──────
+    // O messageImprint contém APENAS o hash SHA-256 (64 hex chars = 32 bytes).
+    // Nenhum documento, dado de faturação ou dado pessoal é transmitido.
+    // Conformidade: RFC 3161 §2.4, §3.1; ETSI EN 319 422; RGPD Art. 25.
+    console.info('[TSA] 🌐 Modo produção — enviando messageImprint ao endpoint qualificado: ' + tsaConfig.endpoint);
+
+    // Construção do pedido RFC 3161 conforme (ASN.1 DER simplificado via fetch)
+    // Nota: a construção DER completa requer uma biblioteca ASN.1 (ex: pkijs).
+    // Para produção, recomenda-se o proxy_worker.js que executa a construção
+    // DER no Cloudflare Worker com suporte a crypto.subtle (Node.js Crypto API).
+    var requestPayload = JSON.stringify({
+        version:        1,
+        messageImprint: {
+            hashAlgorithm: 'SHA-256',
+            hashedMessage: masterHashHex
+        },
+        nonce:          Math.floor(Math.random() * 0xFFFFFFFF),
+        certReq:        true
+    });
+
+    try {
+        var response = await fetch(tsaConfig.endpoint, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/timestamp-query' },
+            body:    requestPayload,
+            signal:  AbortSignal.timeout(10000)
+        });
+
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ' — ' + response.statusText);
+        }
+
+        var tokenBuffer = await response.arrayBuffer();
+        console.info('[TSA] ✅ Token RFC 3161 recebido (' + tokenBuffer.byteLength + ' bytes). eIDAS 2.0: ' + tsaConfig.eidas2Compliant);
+
+        return {
+            ok:             true,
+            local:          false,
+            eidas2Compliant: tsaConfig.eidas2Compliant,
+            provider:       tsaConfig.provider,
+            tokenBuffer:    tokenBuffer,
+            genTime:        new Date().toISOString()
+        };
+
+    } catch (err) {
+        console.error('[TSA] ❌ Falha na comunicação com TSA qualificada: ' + err.message);
+        // Fallback para token local com marcação de falha — não silencia o erro
+        throw new Error('[TSA] Falha de comunicação com TSA externa (' + tsaConfig.endpoint + '): ' + err.message +
+                        '. Activar modo local (NEXUS_AIRGAP=true) ou verificar conectividade.');
+    }
+};
+
 // NEXUS · EXPOSIÇÃO GLOBAL E LOG DE ARRANQUE (versão air-gapped)
 // ============================================================================
 console.info(

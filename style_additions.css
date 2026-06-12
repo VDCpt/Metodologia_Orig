@@ -620,7 +620,7 @@
     line-height: 1.5;
 }
 
-/* ── Secção de Conclusões Periciais ────────────────────────────────────── */
+/* ── Secção de Conclusões de Auditoria ────────────────────────────────────── */
 .pure-wc-findings {
     background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(239, 68, 68, 0.25);
@@ -1598,7 +1598,7 @@
     width: 100% !important;
 }
 
-/* ── RETIFICAÇÃO: Botão "Encerrar Sessão Pericial" — Alta Visibilidade ── */
+/* ── RETIFICAÇÃO: Botão "Encerrar Sessão Técnico-Jurídica" — Alta Visibilidade ── */
 #closeMethodologyBtn {
     background-color: #0f172a !important;
     border: 1px solid #ef4444 !important;

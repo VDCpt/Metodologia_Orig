@@ -175,7 +175,7 @@ function validateJSONStructure(body) {
  *   · cookie            : estado de sessão persistente
  *
  * Estes headers NÃO são encaminhados para api.anthropic.com, impedindo
- * correlação entre o perfil do utilizador e o conteúdo da perícia.
+ * correlação entre o perfil do utilizador e o conteúdo da consultoria técnica.
  * O IP do cliente é preservado APENAS no contexto de rate limiting (KV Store)
  * e NUNCA transmitido ao serviço upstream.
  */

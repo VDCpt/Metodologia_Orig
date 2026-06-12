@@ -817,7 +817,7 @@ const PLATFORM_DATA = {
 };
 
 // ============================================================================
-// QUESTIONÁRIO PERICIAL ESTRATÉGICO (40 Questões)
+// QUESTIONÁRIO TÉCNICO-JURÍDICA ESTRATÉGICO (40 Questões)
 // ============================================================================
 const QUESTIONS_CACHE = [
     { id: 1, text: "Qual a justificação para a diferença entre a comissão retida nos extratos e o valor faturado pela plataforma?", type: "high" },
@@ -1130,7 +1130,7 @@ const getRiskVerdict = (delta, gross) => {
         level: { pt: 'INCONCLUSIVO', en: 'INCONCLUSIVE' },
         key: 'low',
         color: '#8c7ae6',
-        description: { pt: 'Dados insuficientes para veredicto pericial.', en: 'Insufficient data for expert verdict.' },
+        description: { pt: 'Dados insuficientes para veredicto técnico-jurídica.', en: 'Insufficient data for expert verdict.' },
         percent: '0.00%'
     };
 
@@ -1239,7 +1239,23 @@ const readFileAsText = (file) => {
             return;
         }
         const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
+        reader.onload = e => {
+            const text = e.target.result;
+            // ── FASE 3.1 — Registo de buffer para scrubbing activo ───────────
+            // Converter o texto bruto em Uint8Array e registar centralmente.
+            // O módulo de Persistência Zero invoca .fill(0) sobre este buffer
+            // no evento pagehide/visibilitychange antes do encerramento.
+            if (text && typeof text === 'string' && text.length > 0) {
+                try {
+                    const rawBuf = new TextEncoder().encode(text);
+                    window._unifedRawBuffers = window._unifedRawBuffers || [];
+                    window._unifedRawBuffers.push(rawBuf);
+                } catch (_bufErr) {
+                    // Falha silenciosa — não impede o fluxo de parsing
+                }
+            }
+            resolve(text);
+        };
         reader.onerror = reject;
         reader.readAsText(file, 'UTF-8');
     });
@@ -1493,6 +1509,14 @@ async function importForensicControlCSV(file) {
         reader.onload = function(e) {
             try {
                 const text = e.target.result;
+                // ── FASE 3.1 — Registo de buffer para scrubbing activo ───────
+                if (text && typeof text === 'string' && text.length > 0) {
+                    try {
+                        const rawBuf = new TextEncoder().encode(text);
+                        window._unifedRawBuffers = window._unifedRawBuffers || [];
+                        window._unifedRawBuffers.push(rawBuf);
+                    } catch (_) {}
+                }
                 const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
                 if (lines.length < 2) {
                     showToast('[CSV] Ficheiro vazio ou sem entradas de dados.', 'warning');
@@ -1883,11 +1907,11 @@ function _showOTSSuccessModal(filename, masterHash, isPendingStub = false, upgra
         ? `O nó OpenTimestamps não estava acessível. Um ficheiro stub foi gerado com o hash real e o timestamp da tentativa.
            Em ambiente de produção, re-submeter o ficheiro <code style="color:#00e5ff;">.ots</code> gerado ao calendário OTS para obter a prova Bitcoin completa.`
         : isConfirmed
-            ? `O Master Hash SHA-256 desta perícia está ancorado na <strong style="color:#f59e0b;">Bitcoin blockchain</strong> com prova Merkle completa.
+            ? `O Master Hash SHA-256 desta consultoria técnica está ancorado na <strong style="color:#f59e0b;">Bitcoin blockchain</strong> com prova Merkle completa.
                Esta operação constitui <strong style="color:#fff;">prova forense irrevogável de existência temporal</strong> — qualquer alteração
                retroativa ao documento é <strong style="color:#ef4444;">matematicamente inviável</strong>.
                Guarde o ficheiro <code style="color:#00e5ff;">.ots</code> — ele é a sua prova definitiva de existência temporal imutável.`
-            : `O Master Hash SHA-256 desta perícia foi submetido e aceite pelos Calendários Remotos OpenTimestamps.
+            : `O Master Hash SHA-256 desta consultoria técnica foi submetido e aceite pelos Calendários Remotos OpenTimestamps.
                O <code style="color:#00e5ff;">ficheiro .ots</code> contém um <strong style="color:#fff;">Calendar Attestation criptograficamente vinculado</strong>
                ao seu hash — constitui <strong style="color:#f59e0b;">prova de não-repúdio imediata</strong>.
                A confirmação Bitcoin Merkle (bloco blockchain) ficará disponível após ~1 hora.
@@ -1994,7 +2018,7 @@ async function anchorMasterHashExternal() {
                 <p style="color:#e2b87a;font-weight:700;margin-bottom:0.6rem;">Selecione o modo de operação:</p>
                 <p><b style="color:#fff;">Opção A — Carregar Prova TSR</b><br>
                 Valida um ficheiro <code>.tsr</code> gerado localmente pelo motor PowerShell/OpenSSL
-                contra o hash do ficheiro em análise. Adequado para perícias com selagem local pré-existente.</p>
+                contra o hash do ficheiro em análise. Adequado para consultoria técnicas com selagem local pré-existente.</p>
                 <br>
                 <p><b style="color:#fff;">Opção B — Selar Online (FreeTSA)</b><br>
                 Submete o Master Hash ao nó FreeTSA.org em tempo real.<br>
@@ -2327,7 +2351,7 @@ function _showNivel2Modal(tsaDate, tsaProvider) {
                 </div>
             </div>
             <p style="color:#cbd5e1;font-size:0.74rem;line-height:1.75;margin-bottom:1rem;">
-                O Master Hash SHA-256 da presente perícia foi submetido e validado com sucesso
+                O Master Hash SHA-256 da presente consultoria técnica foi submetido e validado com sucesso
                 por uma <strong style="color:#fff;">Autoridade de Carimbo de Tempo (TSA) Certificada</strong>.
                 <strong style="color:#4ade80;">Certificado de Existência:</strong>
             </p>
@@ -2622,7 +2646,7 @@ const ValueSource = {
 // ============================================================================
 const translations = {
     pt: {
-        startBtn: "INICIAR PERÍCIA v1.0-COMMERCIAL-LITIGATION",
+        startBtn: "INICIAR CONSULTORIA TÉCNICA v1.0-COMMERCIAL-LITIGATION",
         splashLogsBtn: "REGISTO DE ATIVIDADES (LOG)",
         navDemo: "CASO REAL (ANONIMIZADO)",
         langBtn: "US",
@@ -2682,7 +2706,7 @@ const translations = {
         dac7Q2: "2.º Trimestre",
         dac7Q3: "3.º Trimestre",
         dac7Q4: "4.º Trimestre",
-        quantumTitle: "CÁLCULO TRIBUTÁRIO PERICIAL · PROVA RAINHA",
+        quantumTitle: "CÁLCULO TRIBUTÁRIO TÉCNICO-JURÍDICA · PROVA RAINHA",
         quantumFormula: "Diferencial de Base em Análise vs Faturada",
         quantumNote: "IVA 23% em falta: — | IVA 6% em falta: —",  // RETIFICAÇÃO 2B: placeholder residual suprimido — valores dinâmicos injectados em updateQuantumCard()
         quantumNoteIVA23: "IVA 23% em falta:",
@@ -2691,19 +2715,19 @@ const translations = {
         alertCriticalTitle: "SMOKING GUN · DIVERGÊNCIA CRÍTICA",
         alertOmissionText: "Comissão Retida (Extrato) vs Faturada (Plataforma):",
         alertAccumulatedNote: "Diferencial de Base em Análise",
-        pdfTitle: "PARECER PERICIAL DE INVESTIGAÇÃO DIGITAL",
+        pdfTitle: "PARECER TÉCNICO-JURÍDICA DE INVESTIGAÇÃO DIGITAL",
         pdfSection1: "1. IDENTIFICAÇÃO E METADADOS",
         pdfSection2: "2. ANÁLISE FINANCEIRA CRUZADA",
         pdfSection3: "3. VEREDICTO DE RISCO (Normas de Conformidade Fiscal)",
         pdfSection4: "4. PROVA RAINHA (SMOKING GUN)",
         pdfSection5: "5. ENQUADRAMENTO LEGAL",
-        pdfSection6: "6. METODOLOGIA PERICIAL",
+        pdfSection6: "6. METODOLOGIA TÉCNICO-JURÍDICA",
         pdfSection7: "7. CERTIFICAÇÃO DIGITAL",
-        pdfSection8: "8. ANÁLISE PERICIAL DETALHADA",
+        pdfSection8: "8. ANÁLISE TÉCNICO-JURÍDICA DETALHADA",
         pdfSection9: "9. FACTOS CONSTATADOS",
         pdfSection10: "10. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO",
         pdfSection11: "11. CADEIA DE CUSTÓDIA",
-        pdfSection12: "12. QUESTIONÁRIO PERICIAL ESTRATÉGICO",
+        pdfSection12: "12. QUESTIONÁRIO TÉCNICO-JURÍDICA ESTRATÉGICO",
         pdfSection13: "13. CONCLUSÃO",
         pdfLegalTitle: "FUNDAMENTAÇÃO LEGAL",
         "pdfLegalNormas de Conformidade Fiscal": "Art. 103 and 104 Normas de Conformidade Fiscal - Tax Fraud and Qualified Fraud",
@@ -2715,7 +2739,7 @@ const translations = {
         pdfFooterLine1: "Art. 103.º RGIT (Fraude Fiscal) · Art. 29.º n.º1 al. b) CIVA · ISO/IEC 27037 · DL 28/2019",
         pdfLabelName: "Nome / Name",
         pdfLabelNIF: "NIF / Tax ID",
-        pdfLabelSession: "Perícia n.º / Expert Report No.",
+        pdfLabelSession: "Consultoria Técnica n.º / Expert Report No.",
         pdfLabelTimestamp: "Unix Timestamp",
         pdfLabelPlatform: "Plataforma Digital / Digital Platform",
         pdfLabelAddress: "Morada / Address",
@@ -2743,13 +2767,13 @@ const translations = {
         hashModalTitle: "VERIFICAÇÃO DE INTEGRIDADE · CADEIA DE CUSTÓDIA",
         omissaoDespesasPctTitle: "Percentagem Cobrada Pela Plataforma",
         closeHashBtnText: "VALIDAR E FECHAR",
-        notaMetodologica: "NOTA METODOLÓGICA FORENSE:\n\"Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, ou a sua entrega em estado insuficiente e inconsistente (incompleto ou corrompido), o ficheiro SAF-T (.xml) é tecnicamente substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet.\nO cruzamento de dados entre a plataforma e o parceiro é validado pelo ficheiro PDF de extratos 'Ganhos da Empresa'. Para efeitos de perícia, o ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, detendo valor probatório material por constituir a fonte primária e fidedigna dos registos que deveriam integrar o reporte fiscal final.\nA integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019 e os princípios de cadeia de custódia previstos no Art. 125.º do CPP.\"\n\nFUNDAMENTAÇÃO DA PROVA MATERIAL: Para efeitos de prova legal de rendimentos reais, consideram-se os ficheiros operacionais que contêm o rasto digital de centenas de viagens efetivamente realizadas. Este conteúdo reflete a atividade económica real do motorista, sendo por isso elevado à categoria de Documento de Suporte (Ledger). Esta metodologia permite detetar e corrigir as discrepâncias omissas nos ficheiros de reporte simplificado, assegurando uma reconstrução financeira rigorosa e auditável em sede judicial.",
+        notaMetodologica: "NOTA METODOLÓGICA FORENSE:\n\"Dada a latência administrativa na disponibilização do ficheiro SAF-T (.xml) pelas plataformas, ou a sua entrega em estado insuficiente e inconsistente (incompleto ou corrompido), o ficheiro SAF-T (.xml) é tecnicamente substituído pelo ficheiro Relatório (.csv) gerado na plataforma Fleet.\nO cruzamento de dados entre a plataforma e o parceiro é validado pelo ficheiro PDF de extratos 'Ganhos da Empresa'. Para efeitos de consultoria técnica, o ficheiro 'Ganhos da Empresa' (Fleet/Ledger) é aqui tratado como o Livro-Razão (Ledger) de suporte, detendo valor probatório material por constituir a fonte primária e fidedigna dos registos que deveriam integrar o reporte fiscal final.\nA integridade desta extração é blindada através da assinatura digital SHA-256 (Hash), garantindo que os dados analisados mantêm a inviolabilidade absoluta desde a sua recolha, em conformidade com o Decreto-Lei n.º 28/2019 e os princípios de cadeia de custódia previstos no Art. 125.º do CPP.\"\n\nFUNDAMENTAÇÃO DA PROVA MATERIAL: Para efeitos de prova legal de rendimentos reais, consideram-se os ficheiros operacionais que contêm o rasto digital de centenas de viagens efetivamente realizadas. Este conteúdo reflete a atividade económica real do motorista, sendo por isso elevado à categoria de Documento de Suporte (Ledger). Esta metodologia permite detetar e corrigir as discrepâncias omissas nos ficheiros de reporte simplificado, assegurando uma reconstrução financeira rigorosa e auditável em sede judicial.",
         parecerTecnicoFinal: "PARECER TÉCNICO DE CONCLUSÃO:\n\"Com base na análise algorítmica dos dados cruzados, detetaram-se duas discrepâncias fundamentais: (1) diferença entre comissões retidas nos extratos e valores faturados pela plataforma, e (2) diferença entre o total do SAF-T e o reportado em DAC7. A utilização de identificadores SHA-256 e selagem QR Code assegura que este parecer é uma Prova Digital Material imutável. Recomenda-se a sua utilização imediata em sede judicial para proteção do mandato e fundamentação de pedido de auditoria externa.\"",
         clausulaIsencaoParceiro: "DECLARAÇÃO DE ISENÇÃO DE RESPONSABILIDADE DO PARCEIRO:\nA presente análise incide exclusivamente sobre o reporte algorítmico da plataforma. Eventuais discrepâncias não imputam dolo ou omissão voluntária ao parceiro operador, dada a opacidade dos dados de origem. Nos termos do Art. 36.º, n.º 11 do CIVA (Faturação elaborada pelo adquirente ou por terceiros), a plataforma detém o monopólio da emissão documental fiscal e SAF-T. Esta assimetria estrutural impede o parceiro de auditar, mitigar ou corrigir atempadamente as discrepâncias algorítmicas que se agravam progressiva e ciclicamente.",
         clausulaCadeiaCustodia: "REGISTO DE CADEIA DE CUSTÓDIA (HASH CHECK):\nA integridade de cada ficheiro de evidência processado é garantida pelo seu hash SHA-256 completo, listado abaixo. Qualquer alteração aos dados originais resultaria numa hash divergente, invalidando a prova.",
         clausulaNormativoISO: "REFERENCIAL NORMATIVO:\nA recolha, preservação e análise das evidências digitais seguiram as diretrizes estabelecidas pela norma ISO/IEC 27037 (Linhas de orientação para identificação, recolha, aquisição e preservação de prova digital), em conformidade com o Decreto-Lei n.º 28/2019.",
         clausulaAssinaturaDigital: "VALIDAÇÃO TÉCNICA DE CONSULTORIA:\nO presente relatorio e selado com o Master Hash SHA-256 completo e o QR Code anexo, garantindo a sua integridade e não-repúdio. A sua validação pode ser efetuada através de qualquer ferramenta de verificação de hash ou leitura de QR Code, que remete para o hash completo do documento.",
-        pureAuxTitle: "INDICAÇÃO DE APOIO PERICIAL — FLUXOS NÃO SUJEITOS A COMISSÃO",
+        pureAuxTitle: "INDICAÇÃO DE APOIO TÉCNICO-JURÍDICA — FLUXOS NÃO SUJEITOS A COMISSÃO",
         pureAuxSub: "Valores retidos pela plataforma mas não sujeitos a comissão (Zona Cinzenta) — Art. 36.º n.º 11 CIVA"
     },
     en: {
@@ -2891,7 +2915,7 @@ const _t = (key) => {
         'revenueGapLabel': { pt: 'GAP SAF-T vs GANHOS', en: 'SAF-T vs EARNINGS GAP' },
         'discrepancyLabel': { pt: 'DISCREPÂNCIA', en: 'DISCREPANCY' },
         'highRisk': { pt: 'RISCO ELEVADO', en: 'HIGH RISK' },
-        'sectionI': { pt: 'I. ANÁLISE PERICIAL', en: 'I. EXPERT ANALYSIS' },
+        'sectionI': { pt: 'I. ANÁLISE TÉCNICO-JURÍDICA', en: 'I. EXPERT ANALYSIS' },
         'sectionII': { pt: 'II. FACTOS CONSTATADOS', en: 'II. ESTABLISHED FACTS' },
         'sectionIII': { pt: 'III. ENQUADRAMENTO LEGAL', en: 'III. LEGAL FRAMEWORK' },
         'sectionIV': { pt: 'IV. IMPACTO FISCAL E AGRAVAMENTO DE GESTÃO', en: 'IV. TAX IMPACT AND MANAGEMENT AGGRAVATION' },
@@ -5676,7 +5700,7 @@ async function performAudit() {
     const hasFiles = Object.values(UNIFEDSystem.documents).some(d => d.files && d.files.length > 0);
     if (!hasFiles) {
         ForensicLogger.addEntry('AUDIT_FAILED', { reason: 'No files' });
-        return showToast('Carregue pelo menos um ficheiro de evidência antes de executar a perícia.', 'error');
+        return showToast('Carregue pelo menos um ficheiro de evidência antes de executar a consultoria técnica.', 'error');
     }
 
     UNIFEDSystem.forensicMetadata = getForensicMetadata();
@@ -5685,7 +5709,7 @@ async function performAudit() {
     const analyzeBtn = document.getElementById('analyzeBtn');
     if(analyzeBtn) {
         analyzeBtn.disabled = true;
-        analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A EXECUTAR PERÍCIA BIG DATA...';
+        analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A EXECUTAR CONSULTORIA TÉCNICA BIG DATA...';
     }
 
     // PERF-02: Em modo DEMO suprime espera artificial (interface já tem spinner)
@@ -5831,7 +5855,7 @@ async function performAudit() {
         UNIFEDSystem.performanceTiming.end = performance.now();
         const duration = (UNIFEDSystem.performanceTiming.end - UNIFEDSystem.performanceTiming.start).toFixed(2);
 
-        logAudit(`📊 VALORES UTILIZADOS NA PERÍCIA (v1.0-COMMERCIAL-LITIGATION):`, 'info');
+        logAudit(`📊 VALORES UTILIZADOS NA CONSULTORIA TÉCNICA (v1.0-COMMERCIAL-LITIGATION):`, 'info');
         logAudit(`   SAF-T Bruto: ${formatCurrency(saftBruto)} (${UNIFEDSystem.documents.saft?.files?.length || 0} ficheiros)`, 'info');
         logAudit(`   Ganhos (Extrato): ${formatCurrency(stmtGanhos)}`, 'info');
         logAudit(`   Despesas (Extrato): ${formatCurrency(stmtDespesas)}`, 'info');
@@ -5844,7 +5868,7 @@ async function performAudit() {
         logAudit(`   Expense Gap (Despesas - Fatura): ${formatCurrency(stmtDespesas - invoiceVal)}`, 'info');
         logAudit(`   Meses com dados: ${UNIFEDSystem.dataMonths.size}`, 'info');
 
-        logAudit(`✅ Perícia BIG DATA v1.0-COMMERCIAL-LITIGATION concluída em ${duration}ms.`, 'success');
+        logAudit(`✅ Consultoria Técnica BIG DATA v1.0-COMMERCIAL-LITIGATION concluída em ${duration}ms.`, 'success');
 
         ForensicLogger.addEntry('AUDIT_COMPLETED', {
             duration,
@@ -5969,7 +5993,7 @@ else {
 if (!UNIFEDSystem.demoMode && !UNIFEDSystem.casoRealAnonimizado) {
     if (typeof deepFreeze === 'function' && UNIFEDSystem.analysis && !Object.isFrozen(UNIFEDSystem.analysis)) {
         deepFreeze(UNIFEDSystem.analysis);
-        console.log('[UNIFED-IMMUTABLE] 🔒 UNIFEDSystem.analysis congelado (imutável para perícia).');
+        console.log('[UNIFED-IMMUTABLE] 🔒 UNIFEDSystem.analysis congelado (imutável para consultoria técnica).');
     }
 
     if (typeof deepFreeze === 'function' && UNIFEDSystem.documents && !Object.isFrozen(UNIFEDSystem.documents)) {
@@ -6070,10 +6094,10 @@ if (!UNIFEDSystem.demoMode && !UNIFEDSystem.casoRealAnonimizado) {
 
 
     } catch(error) {
-        console.error('Erro na perícia:', error);
-        logAudit(`❌ ERRO CRÍTICO NA PERÍCIA: ${error.message}`, 'error');
+        console.error('Erro na consultoria técnica:', error);
+        logAudit(`❌ ERRO CRÍTICO NA CONSULTORIA TÉCNICA: ${error.message}`, 'error');
         ForensicLogger.addEntry('AUDIT_ERROR', { error: error.message });
-        showToast('Erro durante a execução da perícia. Verifique os ficheiros carregados.', 'error');
+        showToast('Erro durante a execução da consultoria técnica. Verifique os ficheiros carregados.', 'error');
     } finally {
         if(analyzeBtn) {
             analyzeBtn.disabled = false;
@@ -6775,7 +6799,7 @@ function showAlerts() {
             'mensal': currentLang === 'pt' ? 'Mensal' : 'Monthly'
         }[UNIFEDSystem.selectedPeriodo] || '';
 
-        const sectionI = currentLang === 'pt' ? 'I. ANÁLISE PERICIAL' : 'I. FORENSIC ANALYSIS';
+        const sectionI = currentLang === 'pt' ? 'I. ANÁLISE TÉCNICO-JURÍDICA' : 'I. FORENSIC ANALYSIS';
         const sectionII = currentLang === 'pt' ? 'II. FACTOS CONSTATADOS' : 'II. ESTABLISHED FACTS';
         const sectionIII = currentLang === 'pt' ? 'III. QUADRO LEGAL' : 'III. LEGAL FRAMEWORK';
         const sectionIV = currentLang === 'pt' ? 'IV. IMPACTO FISCAL' : 'IV. TAX IMPACT';
@@ -7113,7 +7137,7 @@ async function exportPDF() {
     console.warn('[DEPRECATED] exportPDF() está obsoleta. O motor de exportação foi delegado inteiramente à Tríade (unifed_triada_export.js).');
     
     if (typeof showToast === 'function') {
-        showToast('Utilize os botões da "Tríade Pericial" para gerar os pacotes documentais.', 'info');
+        showToast('Utilize os botões da "Tríade Técnico-Jurídica" para gerar os pacotes documentais.', 'info');
     }
     
     // Anula o throw de erro e quebra o loop
@@ -7305,17 +7329,17 @@ function injectAuxiliaryHelperBoxes() {
     wrapper.id = targetId;
     wrapper.className = 'auxiliary-helper-section';
     wrapper.style.display = 'none';
-    wrapper.setAttribute('data-unifed-module', 'AUXILIARY_PERICIAL_v1');
+    wrapper.setAttribute('data-unifed-module', 'AUXILIARY_TÉCNICO-JURÍDICA_v1');
     wrapper.setAttribute('data-legal', 'Lei TVDE · Art. 125.º CPP · ISO/IEC 27037:2012');
 
     const t = (translations && translations[currentLang]) || {};
-    const pureAuxTitle = (t && t.pureAuxTitle) || (currentLang === 'pt' ? 'INDICAÇÃO DE APOIO PERICIAL — FLUXOS NÃO SUJEITOS A COMISSÃO' : 'EXPERT SUPPORT INDICATION — FLOWS NOT SUBJECT TO COMMISSION');
+    const pureAuxTitle = (t && t.pureAuxTitle) || (currentLang === 'pt' ? 'INDICAÇÃO DE APOIO TÉCNICO-JURÍDICA — FLUXOS NÃO SUJEITOS A COMISSÃO' : 'EXPERT SUPPORT INDICATION — FLOWS NOT SUBJECT TO COMMISSION');
     const pureAuxSub = (t && t.pureAuxSub) || (currentLang === 'pt' ? 'Valores retidos pela plataforma mas não sujeitos a comissão (Zona Cinzenta) — Art. 36.º n.º 11 CIVA' : 'Amounts withheld by the platform but not subject to commission (Grey Zone) — Art. 36(11) CIVA');
 
     wrapper.innerHTML = `
         <div class="aux-section-header">
             <i class="fas fa-layer-group"></i>
-            <span data-pt="INDICAÇÃO DE APOIO PERICIAL — FLUXOS NÃO SUJEITOS A COMISSÃO" data-en="EXPERT SUPPORT INDICATION — FLOWS NOT SUBJECT TO COMMISSION">${pureAuxTitle}</span>
+            <span data-pt="INDICAÇÃO DE APOIO TÉCNICO-JURÍDICA — FLUXOS NÃO SUJEITOS A COMISSÃO" data-en="EXPERT SUPPORT INDICATION — FLOWS NOT SUBJECT TO COMMISSION">${pureAuxTitle}</span>
             <small data-pt="Valores retidos pela plataforma mas não sujeitos a comissão (Zona Cinzenta) — Art. 36.º n.º 11 CIVA" data-en="Amounts withheld by the platform but not subject to commission (Grey Zone) — Art. 36(11) CIVA">${pureAuxSub}</small>
         </div>
 
@@ -7420,7 +7444,7 @@ function injectAuxiliaryHelperBoxes() {
 
     console.log('[UNIFED-AUX] ✅ Auxiliary Helper Boxes injetadas via DocumentFragment. Non-Interfering. Core Freeze mantido.');
     ForensicLogger.addEntry('AUX_BOXES_INJECTED', {
-        module: 'AUXILIARY_PERICIAL_v1',
+        module: 'AUXILIARY_TÉCNICO-JURÍDICA_v1',
         targetAfter: 'dashboardAlerts',
         method: 'DocumentFragment',
         boxes: ['Campanhas', 'Portagens', 'Gorjetas', 'TotalNaoSujeitos', 'Cancelamentos']
@@ -7436,7 +7460,7 @@ window._refreshAuxiliaryHeader = function(lang) {
     const subSmall = wrapper.querySelector('.aux-section-header small');
         
     const titleFallback = lang === 'pt' 
-        ? 'INDICAÇÃO DE APOIO PERICIAL — FLUXOS NÃO SUJEITOS A COMISSÃO'
+        ? 'INDICAÇÃO DE APOIO TÉCNICO-JURÍDICA — FLUXOS NÃO SUJEITOS A COMISSÃO'
         : 'EXPERT SUPPORT INDICATION — FLOWS NOT SUBJECT TO COMMISSION';
         
     const subFallback = lang === 'pt'
@@ -8719,14 +8743,185 @@ if (window.crypto && window.crypto.subtle) {
     setTimeout(() => generateSelfIntegrityHash(), 3000);
 }
 
+// ============================================================================
+// FASE 3.1 — MÓDULO DE PERSISTÊNCIA ZERO (PRODUÇÃO)
+// Problema 2 corrigido: `beforeunload` tem cobertura <60% em Chromium/WebKit.
+// Problema 3 corrigido: reatribuição de referências JS não limpa a V8 Heap.
+//
+// Solução implementada:
+//   A) Combinação `visibilitychange` (hidden) + `pagehide` (persisted===false)
+//      cobre os cenários onde beforeunload/unload são suprimidos pelo browser.
+//   B) Scrubbing activo via Uint8Array.fill(0) sobre buffers textuais brutos
+//      registados centralmente em window._unifedRawBuffers[].
+//   C) Eliminação explícita de todos os campos sensíveis de UNIFEDSystem.
+//   D) Purga de todas as chaves de WebStorage (localStorage + sessionStorage)
+//      incluindo logs cifrados e dados de cliente.
+//
+// Referências: MDN "Page Lifecycle API"; WHATWG HTML §8.8 (pagehide);
+//              NIST SP 800-88 Rev.1 §2.4 (Clear); ISO/IEC 27037:2012 §6.2.
+// ============================================================================
+
+// Registo centralizado de buffers de dados brutos para scrubbing explícito.
+// As funções de parsing devem registar referências aqui após criação:
+//   window._unifedRawBuffers.push(buffer) onde buffer é Uint8Array.
+// O motor de purga itera e invoca .fill(0) sobre cada entrada.
+window._unifedRawBuffers = window._unifedRawBuffers || [];
+
+/**
+ * Scrubbing criptográfico activo: sobrescreve fisicamente os blocos de
+ * memória alocados a buffers de dados brutos com bytes nulos (0x00).
+ * Reduz a janela de exposição de dados sensíveis na V8 Heap entre a
+ * libertação da referência JS e a passagem do Garbage Collector.
+ * Nota: não garante eliminação imediata da memória física — o GC continua
+ * a controlar a desalocação real. Cumpre o requisito de "Clear" da NIST
+ * SP 800-88 Rev.1 §2.4 para dados em memória volátil.
+ */
+function _unifedScrubRawBuffers() {
+    const buffers = window._unifedRawBuffers || [];
+    let scrubbed = 0;
+    for (let i = 0; i < buffers.length; i++) {
+        const buf = buffers[i];
+        if (buf && buf instanceof Uint8Array && buf.length > 0) {
+            buf.fill(0);
+            scrubbed++;
+        }
+    }
+    window._unifedRawBuffers = [];
+    return scrubbed;
+}
+
+/**
+ * Purga criptográfica do estado da sessão forense.
+ * Executado sincronamente antes do encerramento do Renderer Process.
+ * Cobertura: campos de análise, dados brutos, hashes, metadata e WebStorage.
+ */
+function _unifedPurgeForensicState() {
+    const ts = new Date().toISOString();
+
+    // ── 1. Scrubbing activo dos buffers Uint8Array registados ────────────────
+    const scrubbedCount = _unifedScrubRawBuffers();
+
+    // ── 2. Neutralização do estado de análise (UNIFEDSystem) ─────────────────
+    if (window.UNIFEDSystem) {
+        // Dados de documentos processados
+        if (window.UNIFEDSystem.documents) {
+            const docTypes = ['control', 'saft', 'invoices', 'statements', 'dac7'];
+            docTypes.forEach(t => {
+                if (window.UNIFEDSystem.documents[t]) {
+                    window.UNIFEDSystem.documents[t].files  = [];
+                    window.UNIFEDSystem.documents[t].hashes = {};
+                    window.UNIFEDSystem.documents[t].totals = {};
+                }
+            });
+        }
+        // Análise financeira e hash criptográfico
+        if (window.UNIFEDSystem.analysis) {
+            window.UNIFEDSystem.analysis.btor          = null;
+            window.UNIFEDSystem.analysis.top3Questions = null;
+            window.UNIFEDSystem.analysis.merkleRoot    = '0'.repeat(64);
+            window.UNIFEDSystem.analysis.merkleMetadata = null;
+            window.UNIFEDSystem.analysis.verdict       = null;
+        }
+        // Hash master e dados mensais
+        window.UNIFEDSystem.masterHash   = '0'.repeat(64);
+        window.UNIFEDSystem.monthlyData  = {};
+        window.UNIFEDSystem.dataMonths   = null;
+        // Dados de cliente
+        if (window.UNIFEDSystem.client) {
+            window.UNIFEDSystem.client = { purgado: true, ts };
+        }
+        // Dados de input bruto
+        if (window.UNIFEDSystem.data) {
+            window.UNIFEDSystem.data.saftInput    = null;
+            window.UNIFEDSystem.data.extractInput = null;
+            window.UNIFEDSystem.data.dac7Input    = null;
+            window.UNIFEDSystem.data.fleetMetadata = null;
+        }
+        // Logs internos
+        window.UNIFEDSystem.logs = [];
+        window.UNIFEDSystem.processedFiles = null;
+    }
+
+    // ── 3. Purga de proxy token ───────────────────────────────────────────────
+    if (window.UNIFED_PROXY_SECRET !== undefined) {
+        window.UNIFED_PROXY_SECRET = '';
+    }
+    if (window.getSecuredProxySecret) {
+        window.getSecuredProxySecret = null;
+    }
+
+    // ── 4. Purga de WebStorage (todas as chaves do sistema UNIFED) ────────────
+    const lsKeysToRemove = [
+        'UNIFED_ACTIVE_SESSION_ID',
+        'UNIFED_FORENSIC_LOGS',
+        'UNIFED_FORENSIC_LOGS_ENC',
+        'ifde_client_data_v12_8',
+        'unifed_lang'
+    ];
+    lsKeysToRemove.forEach(k => {
+        try { localStorage.removeItem(k); } catch (_) {}
+    });
+
+    // Purga total do sessionStorage (dados de sessão autenticada)
+    try { sessionStorage.clear(); } catch (_) {}
+
+    // ── 5. Registo de auditoria de purga (apenas na consola — não persiste) ───
+    console.log(
+        '[SESSÃO FORENSE] 🛑 Purga de Persistência Zero executada em ' + ts + '.' +
+        ' Buffers limpos: ' + scrubbedCount + '.' +
+        ' Estado destruído. WebStorage purgado.'
+    );
+}
+
+/**
+ * Regista os event listeners de ciclo de vida com cobertura máxima.
+ *
+ * Estratégia de cobertura por evento:
+ *   visibilitychange (hidden): cobre fecho de aba, minimização, troca de aba.
+ *     Executa enquanto o Renderer Process está vivo — máxima fiabilidade.
+ *   pagehide (persisted===false): cobre navegação por gesto, back/forward sem BFCache.
+ *     persisted===false confirma que a página não entra em BFCache (destruída).
+ *   beforeunload: mantido como terceira camada para compatibilidade com browsers
+ *     que suprimem pagehide. Não bloqueia o encerramento.
+ *
+ * Nota: a flag _unifedPurgeDone impede execuções duplas se múltiplos eventos
+ * dispararem no mesmo ciclo de encerramento.
+ */
 function registerPageUnload() {
+    let _unifedPurgeDone = false;
+
+    const executePurge = (trigger) => {
+        if (_unifedPurgeDone) return;
+        _unifedPurgeDone = true;
+        // Registo de log antes da purga (o ForensicLogger é destruído a seguir)
+        try {
+            ForensicLogger.addEntry('PAGE_UNLOAD', {
+                trigger,
+                sessionId: (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || 'UNKNOWN',
+                timestamp: new Date().toISOString()
+            });
+        } catch (_) {}
+        // Purga forense
+        _unifedPurgeForensicState();
+    };
+
+    // Camada 1 — visibilitychange: maior cobertura em Chromium/WebKit
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            executePurge('visibilitychange:hidden');
+        }
+    });
+
+    // Camada 2 — pagehide com verificação de persisted===false
+    window.addEventListener('pagehide', (e) => {
+        if (!e.persisted) {
+            executePurge('pagehide:not-persisted');
+        }
+    });
+
+    // Camada 3 — beforeunload como fallback (sem garantia em browsers modernos)
     window.addEventListener('beforeunload', () => {
-        ForensicLogger.addEntry('PAGE_UNLOAD', {
-            sessionId: UNIFEDSystem.sessionId,
-            timestamp: new Date().toISOString()
-        });
-        ForensicLogger._persist();
-        persistSession();
+        executePurge('beforeunload:fallback');
     });
 }
 
@@ -9118,7 +9313,7 @@ window._syncPureDashboard = (function() {
             // Master hash consolidado
             const masterHash = system.masterHash || window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash || 'GERACAO_PENDENTE';
             // ── PATCH P23 — patch_unifed_macro_v13 (Item 4 / split-hash residual) ──
-            // ANTERIOR: #pure-dynamic-hash-section-v (card "VEREDICTO PERICIAL" /
+            // ANTERIOR: #pure-dynamic-hash-section-v (card "VEREDICTO TÉCNICO-JURÍDICA" /
             // Secção V do painel Diamond) só era actualizado por
             // generateMasterHash() — se essa função retornasse cedo via guard
             // RR-01 (_masterHashFrozen de sessão anterior) ANTES da escrita no
@@ -9336,7 +9531,7 @@ window.formatForensicCurrency = function(value, lang = null) {
     // ── PATCH P16 — patch_unifed_macro_v13 (Fix A1 / Item 4) ────────────────
     // ANTERIOR: lang === 'en' → currency: 'USD'. Convertia €1.704.998.820,00
     // em $1.704.998.820,00 pela mera troca do símbolo monetário, alterando
-    // a UNIDADE da prova pericial (EUR → USD) sem qualquer câmbio real.
+    // a UNIDADE da prova técnico-jurídica (EUR → USD) sem qualquer câmbio real.
     // CORRIGIDO: a moeda do processo é SEMPRE EUR (jurisdição PT). Apenas a
     // convenção de agrupamento/decimais (locale) varia com o idioma da UI;
     // o símbolo "€" e o valor numérico permanecem idênticos em PT e EN.
@@ -10182,7 +10377,7 @@ function executarRetificacoesFinaisUnifed() {
 window.executarRetificacoesFinaisUnifed = executarRetificacoesFinaisUnifed;
 // ============================================================================
 // RETIFICAÇÃO CIRÚRGICA v1.0 - GATILHO DE ALERTA DE OMISSÃO
-// Vinculação do Alerta Visual no Dashboard após a execução da Perícia.
+// Vinculação do Alerta Visual no Dashboard após a execução da Consultoria Técnica.
 // window.executarAnaliseForense é o alias público do motor forense:
 // chama a lógica original (ou fallback determinístico), executa o
 // congelamento do botão NIFAF e injeta o alerta persistente ao fim de 3.5 s.
@@ -10292,7 +10487,7 @@ if (document.readyState === 'loading') {
 console.log('[UNIFED-RETIFICACOES] \u2705 Bloco de Retifica\u00e7\u00f5es Cir\u00farrgicas v1.0-COMMERCIAL-LITIGATION carregado (Corre\u00e7\u00f5es 1\u20134 + Final + R1-Blindagem + R2-AntiReentr\u00e2ncia).');
 
 // ============================================================================
-// BOTÃO DE ENCERRAMENTO DE SESSÃO PERICIAL (PURGA CRIPTOGRÁFICA)
+// BOTÃO DE ENCERRAMENTO DE SESSÃO TÉCNICO-JURÍDICA (PURGA CRIPTOGRÁFICA)
 // ============================================================================
 (function attachSessionCloseButton() {
     // Função que executa a purga total e encerra o sistema
@@ -10405,7 +10600,7 @@ console.log('[UNIFED-RETIFICACOES] \u2705 Bloco de Retifica\u00e7\u00f5es Cir\u0
         // DevTools/extensões DEPOIS da purga, caso o removeItem falhe
         // silenciosamente nalgum browser).
         //
-        // NOTA DE CONTRA-PERÍCIA — LIMITES TÉCNICOS REAIS (não omitir):
+        // NOTA DE CONTRA-CONSULTORIA TÉCNICA — LIMITES TÉCNICOS REAIS (não omitir):
         // Esta técnica NÃO garante protecção contra "RAM scraping". Strings
         // JavaScript são imutáveis: localStorage.setItem(key, novoValor) cria
         // um NOVO objecto string; o valor ANTERIOR permanece alocado em

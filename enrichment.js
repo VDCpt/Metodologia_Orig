@@ -166,8 +166,8 @@ ABSOLUTE RULES:
 - Anticipate and rebut the 3 most likely counterparty defenses with technical forensic arguments.
 - Declare the independence of the expert per ISRS 4400 and Art. 153.º CPP in the closing statement.`
 
-            : `Atue como Perito Forense e Consultor Estratégico Independente.
-A sua missão é transformar dados brutos em prova pericial robusta para o ordenamento jurídico de Portugal.
+            : `Atue como Consultor Técnico Forense e Consultor Estratégico Independente.
+A sua missão é transformar dados brutos em prova técnico-jurídica robusta para o ordenamento jurídico de Portugal.
 REGRAS ABSOLUTAS:
 - Não valide as hipóteses da contraparte por cortesia. Questione a metodologia e aponte lacunas na cadeia de custódia.
 - É estritamente PROIBIDO o uso de adjetivos vagos. Utilize métricas, esquemas lógicos e dados quantitativos.
@@ -178,9 +178,9 @@ REGRAS ABSOLUTAS:
 - Todos os valores financeiros devem ser expressos em EUR com 2 casas decimais. Percentagens com 2 casas decimais.
 - Cada referência legal deve incluir o número completo do artigo (ex.: Art. 344.º, n.º 2 CC — não apenas "Art. 344.º").
 - O sujeito passivo é VÍTIMA do monopólio documental (Art. 36.º, n.º 11 CIVA). Enquadre cada achado em conformidade.
-- Conclua cada secção com um achado pericial quantificado, nunca com uma conclusão genérica.
-- Antecipe e rejeite os 3 argumentos de defesa mais prováveis com contra-argumentação técnica pericial.
-- Declare a independência do perito nos termos da ISRS 4400 e do Art. 153.º CPP na nota de encerramento.`;
+- Conclua cada secção com um achado técnico-jurídica quantificado, nunca com uma conclusão genérica.
+- Antecipe e rejeite os 3 argumentos de defesa mais prováveis com contra-argumentação técnica técnico-jurídica.
+- Declare a independência do consultor técnico nos termos da ISRS 4400 e do Art. 153.º CPP na nota de encerramento.`;
 
         const _fcTotals    = (analysis && analysis.totals)    || {};
         const _fcCrossings = (analysis && analysis.crossings) || {};
@@ -247,7 +247,7 @@ REGRAS ABSOLUTAS:
               'Gera uma S\u00edntese Jur\u00eddica para Parecer T\u00e9cnico Forense em tribunal:\n' +
               'A) Qualifica\u00e7\u00e3o Jur\u00eddica dos Factos com achados quantificados (Limbo Contabil\u00edstico)\n' +
               'B) Invers\u00e3o do \u00d3nus da Prova (Art. 344.\u00ba, n.\u00ba 2 CC) com valores espec\u00edficos\n' +
-              'C) Rebatidas T\u00e9cnicas Periciais aos 3 argumentos adversariais mais prov\u00e1veis\n' +
+              'C) Rebatidas T\u00e9cnicas de Auditoria aos 3 argumentos adversariais mais prov\u00e1veis\n' +
               'D) Estrat\u00e9gia de Litiga\u00e7\u00e3o e Quantifica\u00e7\u00e3o de Danos\n\nLinguagem: portugu\u00eas jur\u00eddico formal';
 
         if (!window.UNIFED_PROXY_URL) {
@@ -323,7 +323,7 @@ function generateLocalLegalNarrative(analysis, lang) {
     });
 
     if (isPT) {
-        return `SÍNTESE JURÍDICA PERICIAL — MODO OFFLINE (DETERMINÍSTICO)
+        return `SÍNTESE JURÍDICA TÉCNICO-JURÍDICA — MODO OFFLINE (DETERMINÍSTICO)
 
 Com base na análise dos documentos fornecidos, apurou-se uma omissão de ${omissionPct.toFixed(2)}% entre as Despesas/Comissões retidas pelo extrato bancário (BTOR: ${window.formatForensicCurrency(btor)}) e o valor efetivamente faturado pela plataforma (BTF: ${window.formatForensicCurrency(btf)}), correspondente a um diferencial de ${window.formatForensicCurrency(discrepancy)}.
 
@@ -509,7 +509,7 @@ async function exportDOCX_RETIFICADO(packageType, lang) {
 // FUNÇÃO 3 — exportPeticaoInicial (PATCH P5 — delegada para unifed_triada_export.js)
 // ANTERIOR: implementação duplicada que gerava PDFs inconsistentes com o Pacote Advogado.
 // CORRIGIDO: delega para window._exportPacoteAdvogado (motor único da tríade).
-// Norma: princípio de unicidade de motor pericial (ISO/IEC 27037:2012 §6.3).
+// Norma: princípio de unicidade de motor técnico-jurídica (ISO/IEC 27037:2012 §6.3).
 window.exportPeticaoInicial = function(metricsOverride) {
     console.warn('[DEPRECATED] exportPeticaoInicial() — use o botão "Pacote Advogado" no dashboard.');
     if (typeof window._exportPacoteAdvogado === 'function') {
@@ -761,13 +761,13 @@ ABSOLUTE RULES:
 10. Always conclude with the declaration of independence per ISRS 4400 and Art. 153.º CPP.`;
     }
 
-    return `Atue como Perito Forense e Consultor Estratégico Independente.
-    A sua missão é transformar dados brutos em prova pericial robusta para o ordenamento jurídico de Portugal.
+    return `Atue como Consultor Técnico Forense e Consultor Estratégico Independente.
+    A sua missão é transformar dados brutos em prova técnico-jurídica robusta para o ordenamento jurídico de Portugal.
 
     REGRAS ABSOLUTAS:
     1. Proibição estrita de adjetivos vagos; exija métricas, logs e esquemas lógicos.
     2. Se a prova for insuficiente, declare explicitamente: "Não disponho de informação suficiente para concluir X".
-    3. Identifique riscos de contra-perícia e lacunas na cadeia de custódia em cada análise.
+    3. Identifique riscos de contra-consultoria técnica e lacunas na cadeia de custódia em cada análise.
     4. Enquadramento legal obrigatório: Art. 344.º, n.º 2 CC (inversão do ónus) e Art. 36.º, n.º 11 CIVA.
     5. Estrutura de saída obrigatória: Resumo Executivo, Anexo de Evidências (Tabela) e Master Hash SHA-256 no rodapé.
     6. Jamais invente hashes, endereços IP ou logs; se o dado não existir, aponte a falha.

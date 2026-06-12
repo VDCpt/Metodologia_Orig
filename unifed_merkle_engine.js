@@ -3,7 +3,7 @@
  * INOVAÇÃO #2: eIDAS 2.0 SELECTIVE DISCLOSURE — MOTOR MERKLE TREE SHA-256
  * ============================================================================
  * Implementa prova criptográfica de que questões específicas foram usadas na 
- * perícia sem revelar a base de dados completa (Selective Disclosure via Merkle Tree)
+ * consultoria técnica sem revelar a base de dados completa (Selective Disclosure via Merkle Tree)
  * Conformidade: eIDAS 2.0, RFC 3161, ISO/IEC 27037
  * ============================================================================
  */
@@ -49,7 +49,7 @@ window.UNIFED_MerkleEngine = (function() {
      * Retorna { tree: array de níveis, root: hash da raiz }
      *
      * RETIFICAÇÃO v1.0-R4: Adicionado parâmetro `sessionSalt` obrigatório.
-     * Sem salt único por sessão judicial, um perito da contra-parte pode
+     * Sem salt único por sessão judicial, um consultor técnico da contra-parte pode
      * pré-computar os hashes das 50 questões conhecidas de
      * unifed_questionnaire_50questions.js e reverter o mapa de
      * Selective Disclosure (pre-image attack por dicionário).
@@ -176,7 +176,7 @@ window.UNIFED_MerkleEngine = (function() {
     return {
         /**
          * Gera Raiz Merkle a partir de questões selecionadas
-         * @param {Array} selectedQuestions - Questões usadas na perícia
+         * @param {Array} selectedQuestions - Questões usadas na consultoria técnica
          * @returns {Promise} { root, tree, metadata, timestamp }
          */
         generateMerkleRoot: async function(selectedQuestions) {
@@ -283,9 +283,9 @@ window.UNIFED_MerkleEngine = (function() {
                 standard:      'eIDAS 2.0 Selective Disclosure',
                 exportDate:    new Date().toISOString(),
                 saltReference: saltRef,   // referência parcial — salt completo não exposto
-                signature: `Merkle Root: ${merkleRoot}\nProva de ${selectedQuestionCount} questões integradas na perícia\nSalt único de sessão aplicado (pre-image attack mitigado)\nSem revelar base de dados completa`,
+                signature: `Merkle Root: ${merkleRoot}\nProva de ${selectedQuestionCount} questões integradas na consultoria técnica\nSalt único de sessão aplicado (pre-image attack mitigado)\nSem revelar base de dados completa`,
                 verificationInstructions: [
-                    '1. Obter sessionSalt da sessão pericial registada (UNIFEDSystem.sessionId ou config.timestamp)',
+                    '1. Obter sessionSalt da sessão técnico-jurídica registada (UNIFEDSystem.sessionId ou config.timestamp)',
                     '2. Gerar Raiz Merkle independentemente a partir das questões declaradas + sessionSalt',
                     '3. Formato de folha: SHA-256( sessionSalt + "|" + leafId + "|" + leafText )',
                     '4. Comparar resultado com Merkle Root no relatório',
@@ -299,7 +299,7 @@ window.UNIFED_MerkleEngine = (function() {
          * Gera o Master Hash final a partir de uma coleção de evidências.
          * Concatena os hashes SHA-256 de cada evidência e aplica SHA-256,
          * retornando o hash completo de 64 caracteres hexadecimais (256 bits).
-         * Conformidade com requisitos periciais de integridade de cadeia de custódia.
+         * Conformidade com requisitos de auditoria técnica de integridade de cadeia de custódia.
          *
          * @param {Array} evidenceCollection - Array de objetos contendo campo `hashSHA256`
          * @returns {Promise<string>} Hash completo SHA-256 da concatenação
@@ -324,10 +324,10 @@ console.log('[MERKLE-ENGINE] ✅ Motor Merkle Tree SHA-256 (eIDAS 2.0) Carregado
 
 /**
  * ============================================================================
- * RETIFICAÇÃO CIRÚRGICA: MASTER HASH PERICIAL (SEM TRUNCAMENTO)
+ * RETIFICAÇÃO CIRÚRGICA: MASTER HASH TÉCNICO-JURÍDICA (SEM TRUNCAMENTO)
  * ============================================================================
  * Função global para gerar o hash final de uma coleção de evidências,
- * conforme especificação do perito. Utiliza CryptoJS se disponível,
+ * conforme especificação do consultor técnico. Utiliza CryptoJS se disponível,
  * com fallback para WebCrypto via motor Merkle.
  * Retorna o hash SHA-256 completo (64 caracteres hex), sem qualquer truncamento.
  * 

@@ -15,7 +15,7 @@
     <script>
         (function() {
             'use strict';
-            const LOG_PREFIX = "[PERÍCIA-BLOCKER]:";
+            const LOG_PREFIX = "[CONSULTORIA TÉCNICA-BLOCKER]:";
             // Domínios que serão BLOQUEADOS (APIs externas, TSA, etc.)
             const BLOCKED_DOMAINS = [
                 'api.anthropic.com',
@@ -308,8 +308,16 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                 button.disabled = true;
                 const hash = await deriveSessionToken(salt + pass);
                 input.value = '';
-                const operatorPass = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.operatorToken) || 'UNIFED-DEMO-ACCESS';
-                const expected = await deriveSessionToken(salt + operatorPass);
+                // FASE 3.1: token em texto limpo removido — ver auth.js para documentação completa
+                const operatorToken = (window.UNIFED_CONFIG && window.UNIFED_CONFIG.operatorToken) || null;
+                if (!operatorToken) {
+                    console.error('[SECURITY] ⛔ ERR-AUTH-001: operatorToken não configurado.');
+                    errorSpan.textContent = 'Erro de configuração (ERR-AUTH-001).';
+                    errorSpan.style.display = 'block';
+                    input.disabled = false; button.disabled = false;
+                    return;
+                }
+                const expected = await deriveSessionToken(salt + operatorToken);
                 if (hash === expected) {
                     sessionStorage.setItem(SESSION_KEY, 'true');
                     sessionStorage.setItem(SESSION_KEY + '_ts', String(Date.now()));
@@ -376,7 +384,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
     }
 })();
 </script>
-<!-- ── MÓDULO DE CONTRA-PERÍCIA (patch_unifed_macro_v13) ──────────────────────
+<!-- ── MÓDULO DE CONTRA-CONSULTORIA TÉCNICA (patch_unifed_macro_v13) ──────────────────────
      Exporta pacote ZIP com 10 artefactos forenses para verificação independente.
      Depende de: JSZip (linha 72), WebCrypto, UNIFEDSystem, UNIFED_FORENSIC_LOG.
      Normas: ISO/IEC 27037:2012 · Art. 125.º CPP · D.L. n.º 28/2019
@@ -515,7 +523,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                     </div>
                 </div>
                 <div class="control-group">
-                    <button id="closeMethodologyBtn" style="height:38px; font-size:11px; background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#ef4444; cursor:pointer; border-radius:6px; transition:all 0.3s; padding:0 16px; font-weight:bold; white-space:nowrap; margin-right:8px;" data-pt="🛑 Encerrar Sessão Pericial" data-en="🛑 Terminate Forensic Session">🛑 Encerrar Sessão Pericial</button>
+                    <button id="closeMethodologyBtn" style="height:38px; font-size:11px; background:rgba(239,68,68,0.15); border:1px solid #ef4444; color:#ef4444; cursor:pointer; border-radius:6px; transition:all 0.3s; padding:0 16px; font-weight:bold; white-space:nowrap; margin-right:8px;" data-pt="🛑 Encerrar Sessão Técnico-Jurídica" data-en="🛑 Terminate Forensic Session">🛑 Encerrar Sessão Técnico-Jurídica</button>
                     <button id="demoModeBtn" class="btn-demo-nav"><i class="fas fa-flask"></i><span id="demoBtnText">CASO REAL (ANONIMIZADO)</span></button>
                     <button id="langToggleBtn" class="btn-lang-toggle"><i class="fas fa-globe"></i><span id="currentLangLabel">PT</span></button>
                     <button id="viewLogsHeaderBtn" class="btn-tool" title="Ver Registo de Atividades (Art. 30 RGPD)"><i class="fas fa-history"></i></button>
@@ -616,7 +624,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                         <div class="counter-item-compact"><span id="dac7CountCompact" class="counter-value-compact">0</span><span class="counter-label-compact">DAC7</span></div>
                     </div>
                     <button id="analyzeBtn" class="btn-forensic" disabled>
-                        <i class="fas fa-search-dollar"></i> <span id="btnAnalyze">EXECUTAR PERÍCIA</span>
+                        <i class="fas fa-search-dollar"></i> <span id="btnAnalyze">EXECUTAR CONSULTORIA TÉCNICA</span>
                     </button>
                 </div>
 
@@ -721,7 +729,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
 
                 <!-- QUANTUM BOX -->
                 <div id="quantumBox" class="quantum-box" style="display:none;">
-                    <h4 id="quantumTitle"><i class="fas fa-balance-scale"></i> CÁLCULO TRIBUTÁRIO PERICIAL · PROVA RAINHA</h4>
+                    <h4 id="quantumTitle"><i class="fas fa-balance-scale"></i> CÁLCULO TRIBUTÁRIO TÉCNICO-JURÍDICA · PROVA RAINHA</h4>
                     <div id="quantumValue" class="quantum-value">0,00 €</div>
                     <p id="quantumFormula" class="quantum-formula">Diferencial de Base em Análise vs Faturada</p>
                     <p id="quantumNote" class="quantum-formula"
@@ -740,7 +748,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                         <span data-pt="Discrepância:" data-en="Discrepancy:">Discrepância:</span>
                         <span id="verdictPercentSpan">0,00%</span>
                     </p>
-                    <div id="verdictDesc" class="verdict-desc">Execute a perícia para obter o veredicto.</div>
+                    <div id="verdictDesc" class="verdict-desc">Execute a consultoria técnica para obter o veredicto.</div>
                     <div id="verdictLegal" class="verdict-legal" style="margin-top:1rem; font-size:0.8rem; color:var(--text-secondary); border-top:1px dashed var(--border-color); padding-top:0.5rem;"></div>
                 </div>
 
@@ -795,7 +803,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
 
                 <!-- PURE DASHBOARD -->
                 <div id="pureDashboardWrapper" style="display:none;"></div>
-<section id="pureDashboard" class="pure-section" aria-label="Painel Prova Pericial v1.0-COMMERCIAL-LITIGATION">
+<section id="pureDashboard" class="pure-section" aria-label="Painel Prova Técnico-Jurídica v1.0-COMMERCIAL-LITIGATION">
 
   <!-- ── HEADER DA SECÇÃO ────────────────────────────────────────────────── -->
   <div class="pure-section-header">
@@ -924,9 +932,9 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
             <td style="padding:14px 12px; vertical-align:middle; border-bottom:1px solid rgba(239,68,68,0.1); background:#080f1e;">
               <div style="font-size:0.64rem; color:#94a3b8; line-height:1.6;"
                    id="pure-sg2-legal"
-                   data-pt="Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)"
+                   data-pt="Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Técnico-Jurídica)"
                    data-en="Violation: Art. 103 (Reporting Obligation) · Art. 78 CIVA (Invoicing) · Art. 125 CPP (Expert Evidence)">
-                Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)
+                Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Técnico-Jurídica)
               </div>
             </td>
           </tr>
@@ -1026,7 +1034,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
     </div>
 
     <div class="pure-wc-findings" id="pure-wc-findings">
-      <strong id="pure-wc-findings-title" data-pt="CONCLUSÕES PERICIAIS:" data-en="EXPERT CONCLUSIONS:">CONCLUSÕES PERICIAIS:</strong>
+      <strong id="pure-wc-findings-title" data-pt="CONCLUSÕES DE AUDITORIA:" data-en="TECHNICAL AUDIT CONCLUSIONS:">CONCLUSÕES DE AUDITORIA:</strong>
       <ul id="pure-wc-findings-list">
         <li id="pure-wc-finding-1" data-pt="A omissão de 89,26% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório." data-en="The omission of 89.26% of the commission universe in statements vs invoices suggests deliberate underestimation algorithm, not random error.">A omissão de 89,26% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório.</li>
         <li id="pure-wc-finding-2" data-pt="A consistência do padrão em múltiplos períodos (out/nov/dez 2024) rejeita hipótese de falha pontual de sincronização." data-en="The consistency of the pattern across multiple periods (Oct/Nov/Dec 2024) rejects the single-point synchronization failure hypothesis.">A consistência do padrão em múltiplos períodos (out/nov/dez 2024) rejeita hipótese de falha pontual de sincronização.</li>
@@ -1036,7 +1044,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
     </div>
 
     <div class="pure-wc-recommendation" id="pure-wc-recommendation">
-      <strong id="pure-wc-rec-title" data-pt="RECOMENDAÇÃO PERICIAL:" data-en="EXPERT RECOMMENDATION:">RECOMENDAÇÃO PERICIAL:</strong>
+      <strong id="pure-wc-rec-title" data-pt="RECOMENDAÇÃO TÉCNICO-JURÍDICA:" data-en="EXPERT RECOMMENDATION:">RECOMENDAÇÃO TÉCNICO-JURÍDICA:</strong>
       <p id="pure-wc-rec-text" data-pt="Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (€1.743.598.080 em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado." data-en="Recommend referral for tax fraud investigation (DCIAP/PGR) based on evidence of structured omission, pattern of systemic underestimation, and documented violation of invoicing standards (Art. 78 CIVA). The scale of damage (€1,743,598,080 in 7-year projection) justifies application of organized economic crime typology.">Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (€1.743.598.080 em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado.</p>
     </div>
   </div>
@@ -1097,7 +1105,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
         id="purePacoteAnalistaBtn"
         class="pure-btn-atf pure-btn-pacote"
         style="display:none;background:linear-gradient(135deg,#1a2a1a,#0d1f0d);border-color:#22c55e;color:#22c55e;"
-        title="Exportar JSON + PDF pericial num pacote offline para o analista"
+        title="Exportar JSON + PDF técnico-jurídica num pacote offline para o analista"
         onclick="if(typeof window._exportPacoteAnalista === 'function') window._exportPacoteAnalista(); else console.info('[UNIFED-PACOTE] Pacote Analista offline gerado — estrutura preparada para download local.');"
         data-pt="📁 EXPORTAR PACOTE ANALISTA (OFFLINE)"
         data-en="📁 EXPORT ANALYST PACKAGE (OFFLINE)">
@@ -1166,7 +1174,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
   <div class="pure-card pure-card-verdict" id="pureVerdictCard">
     <div class="pure-verdict-row">
       <div class="pure-verdict-block">
-        <div class="pure-verdict-label" id="pure-verdict-label" data-pt="VEREDICTO PERICIAL" data-en="EXPERT VERDICT">VEREDICTO PERICIAL</div>
+        <div class="pure-verdict-label" id="pure-verdict-label" data-pt="VEREDICTO TÉCNICO-JURÍDICA" data-en="EXPERT VERDICT">VEREDICTO TÉCNICO-JURÍDICA</div>
         <div id="pure-verdict" class="pure-verdict-value" data-i18n-ignore>---</div>
         <div id="pure-verdict-pct" class="pure-verdict-pct" data-i18n-ignore>0%</div>
         <div class="pure-verdict-basis" id="pure-verdict-basis" data-pt="Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP" data-en="Art. 103 / 104 Normas de Conformidade Fiscal · Art. 125 CPP">Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP</div>
@@ -1793,7 +1801,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                 <div id="logsDisplayArea" style="
                     font-family:'JetBrains Mono',monospace; font-size:0.72rem;
                     color:#94a3b8; min-height:200px;">
-                    <p style="color:#475569; text-align:center; padding:2rem 0;">Sem registos disponíveis. Execute uma perícia para gerar entradas de registo.</p>
+                    <p style="color:#475569; text-align:center; padding:2rem 0;">Sem registos disponíveis. Execute uma consultoria técnica para gerar entradas de registo.</p>
                 </div>
             </div>
 
@@ -1832,7 +1840,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                 <div style="margin-bottom:1.5rem; padding:1rem; background:#0a0f1e; border:1px solid #1e293b; border-radius:6px;">
                     <div style="color:#64748b; font-size:0.7rem; font-family:'JetBrains Mono',monospace; letter-spacing:1px; margin-bottom:0.5rem;">MASTER HASH SHA-256 (SESSÃO ACTUAL)</div>
                     <div id="masterHashFull" style="color:#4ade80; font-family:'JetBrains Mono',monospace; font-size:0.72rem; word-break:break-all; line-height:1.6;">
-                        HASH INDISPONÍVEL — Execute uma perícia forense primeiro.
+                        HASH INDISPONÍVEL — Execute uma consultoria técnica forense primeiro.
                     </div>
                 </div>
 
@@ -1908,7 +1916,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                 font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#94a3b8;">
                 <p style="color:#475569; text-align:center; padding:3rem 0;">
                     <i class="fas fa-shield-alt" style="font-size:2rem; color:#1e293b; display:block; margin-bottom:0.75rem;"></i>
-                    Cadeia de custódia inicializada.<br>Execute uma perícia para registar entradas.
+                    Cadeia de custódia inicializada.<br>Execute uma consultoria técnica para registar entradas.
                 </p>
             </div>
 
@@ -2089,7 +2097,7 @@ console.log('[UNIFED-CONFIG] ℹ️  Proxy LLM configurado: ' + (window.UNIFED_P
                         qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">QR indisponível</span>';
                     }
                 } else {
-                    qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">Execute perícia primeiro</span>';
+                    qrTarget.innerHTML = '<span style="font-size:0.5rem;color:#475569;">Execute consultoria técnica primeiro</span>';
                 }
             }
             const countEl = document.getElementById('custodyEntryCount');

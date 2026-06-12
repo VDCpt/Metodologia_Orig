@@ -4,7 +4,7 @@
  * ============================================================================
  * Fonte única de verdade para a versão do sistema.
  * Carregado PRIMEIRO em index.html (antes de qualquer outro script).
- * Norma: D.L. n.º 28/2019 — rastreabilidade de versões de software pericial.
+ * Norma: D.L. n.º 28/2019 — rastreabilidade de versões de software técnico-jurídica.
  * ============================================================================
  */
 window.UNIFED_VERSION = Object.freeze({

@@ -1,11 +1,11 @@
 <!--
   ============================================================================
-  UNIFED - PROBATUM · v1.0-COMMERCIAL-LITIGATION · PAINEL DE PROVA PERICIAL
+  UNIFED - PROBATUM · v1.0-COMMERCIAL-LITIGATION · PAINEL DE PROVA TÉCNICO-JURÍDICA
   ============================================================================
   Elementos de prova determinantes + Evidência de Materialidade
   Todos os valores são preenchidos por _syncPureDashboard() em script.js.
   Revelação dinâmica: elementos de prova determinantes iniciam ocultos (display:none)
-  e são forçados a display:flex com animação fade-in após perícia.
+  e são forçados a display:flex com animação fade-in após consultoria técnica.
   
   SUPORTE A TRADUÇÃO PT/EN: Placeholders com data-pt / data-en
   BLINDAGEM: elementos com data-i18n-ignore NÃO serão traduzidos
@@ -17,7 +17,7 @@
   ============================================================================
 -->
 
-<section id="pureDashboard" class="pure-section" aria-label="Painel Prova Pericial v1.0-COMMERCIAL-LITIGATION">
+<section id="pureDashboard" class="pure-section" aria-label="Painel Prova Técnico-Jurídica v1.0-COMMERCIAL-LITIGATION">
 
   <!-- ── HEADER DA SECÇÃO ────────────────────────────────────────────────── -->
   <div class="pure-section-header">
@@ -128,7 +128,7 @@
             <div style="font-size:1.15rem; font-weight:900; color:#ef4444;" id="pure-sg2-delta">€ 0,00</div>
             <div style="font-size:0.8rem; font-weight:600; color:#f87171;" id="pure-sg2-pct">(0%)</div>
           </td>
-          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.15); font-size:0.65rem; color:#94a3b8; line-height:1.5;" id="pure-sg2-legal">Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Pericial)</td>
+          <td style="padding:10px 12px; vertical-align:middle; border:1px solid rgba(239,68,68,0.15); font-size:0.65rem; color:#94a3b8; line-height:1.5;" id="pure-sg2-legal">Violação: Art. 103.º (Obrigação Declarativa) · Art. 78.º CIVA (Faturação) · Art. 125.º CPP (Prova Técnico-Jurídica)</td>
         </tr>
 
         <!-- LINHA 2 — SMOKING GUN I (Retenção Ilícita de Comissões) -->
@@ -213,7 +213,7 @@
     </div>
 
     <div class="pure-wc-findings" id="pure-wc-findings">
-      <strong id="pure-wc-findings-title" data-pt="CONCLUSÕES PERICIAIS:" data-en="EXPERT CONCLUSIONS:">CONCLUSÕES PERICIAIS:</strong>
+      <strong id="pure-wc-findings-title" data-pt="CONCLUSÕES DE AUDITORIA:" data-en="TECHNICAL AUDIT CONCLUSIONS:">CONCLUSÕES DE AUDITORIA:</strong>
       <ul id="pure-wc-findings-list">
         <li id="pure-wc-finding-1" data-pt="A omissão de 89,26% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório." data-en="The omission of 89.26% of the commission universe in statements vs invoices suggests deliberate underestimation algorithm, not random error.">A omissão de 89,26% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório.</li>
         <li id="pure-wc-finding-2" data-pt="A consistência do padrão em múltiplos períodos (out/nov/dez 2024) rejeita hipótese de falha pontual de sincronização." data-en="The consistency of the pattern across multiple periods (Oct/Nov/Dec 2024) rejects the single-point synchronization failure hypothesis.">A consistência do padrão em múltiplos períodos (out/nov/dez 2024) rejeita hipótese de falha pontual de sincronização.</li>
@@ -223,7 +223,7 @@
     </div>
 
     <div class="pure-wc-recommendation" id="pure-wc-recommendation">
-      <strong id="pure-wc-rec-title" data-pt="RECOMENDAÇÃO PERICIAL:" data-en="EXPERT RECOMMENDATION:">RECOMENDAÇÃO PERICIAL:</strong>
+      <strong id="pure-wc-rec-title" data-pt="RECOMENDAÇÃO TÉCNICO-JURÍDICA:" data-en="EXPERT RECOMMENDATION:">RECOMENDAÇÃO TÉCNICO-JURÍDICA:</strong>
       <p id="pure-wc-rec-text" data-pt="Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (€1.743.598.080 em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado." data-en="Recommend referral for tax fraud investigation (DCIAP/PGR) based on evidence of structured omission, pattern of systemic underestimation, and documented violation of invoicing standards (Art. 78 CIVA). The scale of damage (€1,743,598,080 in 7-year projection) justifies application of organized economic crime typology.">Recomenda-se encaminhamento para investigação de omissão de faturação (DCIAP/PGR) com base em evidência de omissão estruturada, padrão de subestimação sistémica e violação documentada de normas de faturação (Art. 78.º CIVA). A escala de dano (€1.743.598.080 em projeção de 7 anos) justifica aplicação de tipologia de crime económico organizado.</p>
     </div>
   </div>
@@ -284,7 +284,7 @@
         id="purePacoteAnalistaBtn"
         class="pure-btn-atf pure-btn-pacote"
         style="display:none;background:linear-gradient(135deg,#1a2a1a,#0d1f0d);border-color:#22c55e;color:#22c55e;"
-        title="Exportar JSON + PDF pericial num pacote offline para o analista"
+        title="Exportar JSON + PDF técnico-jurídica num pacote offline para o analista"
         onclick="if(typeof window._exportPacoteAnalista === 'function') window._exportPacoteAnalista(); else console.info('[UNIFED-PACOTE] Pacote Analista offline gerado — estrutura preparada para download local.');"
         data-pt="📁 EXPORTAR PACOTE ANALISTA (OFFLINE)"
         data-en="📁 EXPORT ANALYST PACKAGE (OFFLINE)">
@@ -353,7 +353,7 @@
   <div class="pure-card pure-card-verdict" id="pureVerdictCard">
     <div class="pure-verdict-row">
       <div class="pure-verdict-block">
-        <div class="pure-verdict-label" id="pure-verdict-label" data-pt="VEREDICTO PERICIAL" data-en="EXPERT VERDICT">VEREDICTO PERICIAL</div>
+        <div class="pure-verdict-label" id="pure-verdict-label" data-pt="VEREDICTO TÉCNICO-JURÍDICA" data-en="EXPERT VERDICT">VEREDICTO TÉCNICO-JURÍDICA</div>
         <div id="pure-verdict" class="pure-verdict-value" data-pt="RISCO ELEVADO" data-en="HIGH RISK">RISCO ELEVADO</div>
         <div id="pure-verdict-pct" class="pure-verdict-pct" data-i18n-ignore>89,26%</div>
         <div class="pure-verdict-basis" id="pure-verdict-basis" data-pt="Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP" data-en="Art. 103 / 104 Normas de Conformidade Fiscal · Art. 125 CPP">Art. 103.º / 104.º Normas de Conformidade Fiscal · Art. 125.º CPP</div>

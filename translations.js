@@ -3,7 +3,7 @@
  * UNIFED-PROBATUM · TRANSLATIONS MODULE v1.0-NACIONALIZADO
  * ============================================================================
  * Dicionário Bilíngue Completo: PT-PT ↔ EN-US
- * 190+ Chaves para Interface, Tríade Pericial, Cadeia de Custódia, Frota, I18N
+ * 190+ Chaves para Interface, Tríade Técnico-Jurídica, Cadeia de Custódia, Frota, I18N
  *
  * RETIFICAÇÕES APLICADAS (v1.0-NACIONALIZADO):
  * REQ-04a: Nacionalização Jurisprudencial – termos PT-PT alinhados com DL 28/2019,
@@ -24,11 +24,11 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     // ════════════════════════════════════════════════════════════════════════
     // BOTÕES PRINCIPAIS
     // ════════════════════════════════════════════════════════════════════════
-    'btn_start_analysis': { 'pt': 'INICIAR PERÍCIA v1.0', 'en': 'START FORENSIC ANALYSIS v1.0' },
+    'btn_start_analysis': { 'pt': 'INICIAR CONSULTORIA TÉCNICA v1.0', 'en': 'START FORENSIC ANALYSIS v1.0' },
     'ui_btn_execute_forensics': { 'pt': 'EXECUTAR ANÁLISE FORENSE', 'en': 'EXECUTE FORENSIC ANALYSIS' },
 
     // ════════════════════════════════════════════════════════════════════════
-    // BOTÕES PRINCIPAIS (PACOTES PERICIAIS)
+    // BOTÕES PRINCIPAIS (PACOTES DE AUDITORIA)
     // ════════════════════════════════════════════════════════════════════════
     'btn_export_lawyer_pack': {
         'pt': 'Exportar Pacote Advogado (Parecer, Petição, Anexo de Custódia + JSON)',
@@ -124,20 +124,20 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     'architecture_eidas_ready': { 'pt': 'Pronto para eIDAS 2.0 (Merkle + Divulgação Selectiva)', 'en': 'eIDAS 2.0 Ready (Merkle + Selective Disclosure)' },
 
     // ════════════════════════════════════════════════════════════════════════
-    // TRÍADE PERICIAL — PACOTES DE EXPORTAÇÃO
+    // TRÍADE TÉCNICO-JURÍDICA — PACOTES DE EXPORTAÇÃO
     // ════════════════════════════════════════════════════════════════════════
-    'triada_analyst_pack_title': { 'pt': 'Pacote do Analista Forense — Tríade Pericial', 'en': 'Forensic Analyst Package — Triadic Opinion' },
-    'triada_lawyer_pack_title': { 'pt': 'Pacote do Advogado — Tríade Pericial + Custódia', 'en': 'Lawyer Package — Triadic Opinion + Custody' },
+    'triada_analyst_pack_title': { 'pt': 'Pacote do Analista Forense — Tríade Técnico-Jurídica', 'en': 'Forensic Analyst Package — Triadic Opinion' },
+    'triada_lawyer_pack_title': { 'pt': 'Pacote do Advogado — Tríade Técnico-Jurídica + Custódia', 'en': 'Lawyer Package — Triadic Opinion + Custody' },
     'triada_custody_annex_title': { 'pt': 'Anexo de Cadeia de Custódia (ISO/IEC 27037)', 'en': 'Evidence Custody Annex (ISO/IEC 27037)' },
     'triada_export_analyst_label': { 'pt': 'Exportar Pacote Analista (Parecer Técnico + JSON)', 'en': 'Export Analyst Package (Technical Opinion + JSON)' },
     'triada_export_lawyer_label': { 'pt': 'Exportar Pacote Advogado (Parecer, Petição, Custódia + JSON)', 'en': 'Export Lawyer Package (Opinion, Petition, Custody + JSON)' },
-    'triada_doc_count_analyst': { 'pt': '{{count}} documentos periciais + JSON', 'en': '{{count}} forensic documents + JSON' },
+    'triada_doc_count_analyst': { 'pt': '{{count}} documentos técnico-jurídicos + JSON', 'en': '{{count}} forensic documents + JSON' },
     'triada_doc_count_lawyer': { 'pt': '{{count}} peças processuais + Anexo de Custódia + JSON', 'en': '{{count}} procedural documents + Custody Annex + JSON' },
     'triada_merkle_root_label': { 'pt': 'Raiz Merkle (eIDAS 2.0 – Divulgação Selectiva)', 'en': 'Merkle Root (eIDAS 2.0 Selective Disclosure)' },
     'triada_merkle_salt_label': { 'pt': 'Salt de Sessão (referência parcial)', 'en': 'Session Salt (partial reference)' },
-    'triada_session_id_label': { 'pt': 'ID de Sessão Pericial', 'en': 'Forensic Session ID' },
+    'triada_session_id_label': { 'pt': 'ID de Sessão Técnico-Jurídica', 'en': 'Forensic Session ID' },
     'triada_period_label': { 'pt': 'Período Fiscal em Análise', 'en': 'Fiscal Period Under Analysis' },
-    'triada_verdict_label': { 'pt': 'Veredito de Risco Pericial', 'en': 'Forensic Risk Verdict' },
+    'triada_verdict_label': { 'pt': 'Veredito de Risco Técnico-Jurídica', 'en': 'Forensic Risk Verdict' },
     'triada_master_hash_label': { 'pt': 'Master Hash SHA-256 do Lote', 'en': 'Batch SHA-256 Master Hash' },
     'triada_tsa_mock_warning': { 'pt': '⚠️ Timestamp: Simulação RFC 3161 em ambiente isolado. Volte a selar com TSA acreditada para submissão judicial.', 'en': '⚠️ Timestamp: Air-Gapped RFC 3161 Mock. Re-seal with accredited TSA for judicial submission.' },
     'triada_seal_type_label': { 'pt': 'Tipo de Selagem', 'en': 'Seal Type' },

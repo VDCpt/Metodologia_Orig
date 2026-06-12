@@ -270,9 +270,9 @@ window.UNIFED_ArchitectureReport = {
     
     <h3>Modo de Operação</h3>
     <div class="architecture">
-        ✓ <strong>Offline-First</strong>: O motor de análise UNIFED roda localmente no navegador do perito.<br>
+        ✓ <strong>Offline-First</strong>: O motor de análise UNIFED roda localmente no navegador do consultor técnico.<br>
         ✓ <strong>Read-Only Access</strong>: Todos os dados de entrada (Extrato Bancário, SAF-T, DAC7) são tratados em modo read-only.<br>
-        ✓ <strong>No Cloud Synchronization</strong>: Nenhuma transmissão de dados para servidores remotos (exceto exportação manual pelo perito).<br>
+        ✓ <strong>No Cloud Synchronization</strong>: Nenhuma transmissão de dados para servidores remotos (exceto exportação manual pelo consultor técnico).<br>
         ✓ <strong>Deterministic Processing</strong>: Mesmos inputs sempre produzem mesmos outputs (não há element aleatório).<br>
         ✓ <strong>Criptographic Validation</strong>: Integridade de outputs validada com SHA-256 e Merkle Trees (eIDAS 2.0).
     </div>
@@ -304,7 +304,7 @@ window.UNIFED_ArchitectureReport = {
     <div class="compliance">✓ NIST SP 800-86 — Guia de Integração de Técnicas Forenses na Resposta a Incidentes</div>
     <div class="compliance">✓ RFC 3161 — Time-Stamp Protocol (TSP) para Autenticação de Timestamps</div>
     <div class="compliance">✓ eIDAS 2.0 — Selective Disclosure via Merkle Tree Proofs</div>
-    <div class="compliance">✓ Art. 125º CPP — Admissibilidade de Prova Pericial Digital em Portugal</div>
+    <div class="compliance">✓ Art. 125º CPP — Admissibilidade de Prova Técnico-Jurídica Digital em Portugal</div>
     <div class="compliance">✓ Art. 103º Normas de Conformidade Fiscal — Obrigações de Faturação e Documentação Fiscal</div>
     <div class="compliance">✓ Art. 2º, n.º 1, al. i) CIVA — Operações Sujeitas a Autoliquidação</div>
     <div class="compliance">✓ Diretiva UE 2021/514 (DAC7) — Reportagem de Operações de Plataformas Digitais</div>
@@ -417,7 +417,7 @@ window.UNIFED_ArchitectureReport = {
 
 <div class="footer">
     <p>Este relatório foi gerado automaticamente pelo sistema UNIFED-PROBATUM em tempo de execução.</p>
-    <p>Não constitui aconselhamento jurídico. Deve ser validado por perito independente.</p>
+    <p>Não constitui aconselhamento jurídico. Deve ser validado por consultor técnico independente.</p>
     <p>Conformidade regulatória verificada com base em legislação portuguesa e europeia vigente.</p>
 </div>
 

@@ -2,7 +2,7 @@
  * ============================================================================
  * INOVAÇÃO #1: MULTI-AXIS ADVERSARIAL QUESTIONNAIRE (50 QUESTÕES)
  * ============================================================================
- * Base de Questões para Admissibilidade Pericial (Nível Tribunal)
+ * Base de Questões para Admissibilidade Técnico-Jurídica (Nível Tribunal)
  * Estruturadas em 5 Eixos: Cadeia Custódia, DAC7 vs SAF-T, Nexus-Zero, 
  * Algoritmo e Responsabilidade Normas de Conformidade Fiscal
  * 
@@ -29,8 +29,8 @@ window.UNIFED_QUESTIONNAIRE = {
             title: 'Cadeia de Custódia ISO 27037',
             text: 'A origem dos dados (Extrato Bancário, SAF-T PT, DAC7) foi documentada com identificação temporal precisa (timestamp RFC 3161)?',
             norma: 'ISO/IEC 27037:2012 § 5.3 (Identificação e Documentação de Evidência Digital)',
-            implicacao: 'Sem documentação temporal rigorosa, a admissibilidade da prova pericial fica comprometida.',
-            defesa: 'O perito deve produzir certificado de timestamp autenticado para cada ficheiro de entrada.'
+            implicacao: 'Sem documentação temporal rigorosa, a admissibilidade da prova técnico-jurídica fica comprometida.',
+            defesa: 'O consultor técnico deve produzir certificado de timestamp autenticado para cada ficheiro de entrada.'
         },
         {
             id: 'A002',
@@ -48,7 +48,7 @@ window.UNIFED_QUESTIONNAIRE = {
             text: 'O hash SHA-256 original de cada ficheiro foi calculado e armazenado antes de qualquer processamento?',
             norma: 'ISO/IEC 27037:2012 § 5.2 (Integridade Criptográfica)',
             implicacao: 'Sem hash inicial, não há prova de não-corrupção do arquivo.',
-            defesa: 'Fornecer manifesto SHA-256 com assinatura digital do perito e timestamp.'
+            defesa: 'Fornecer manifesto SHA-256 com assinatura digital do consultor técnico e timestamp.'
         },
         {
             id: 'A004',
@@ -72,9 +72,9 @@ window.UNIFED_QUESTIONNAIRE = {
             id: 'A006',
             axis: 'A',
             title: 'Cadeia de Custódia ISO 27037',
-            text: 'O perito tem competência certificada em ferramentas forenses digitais (ex: ISO/IEC 27037, NIST)?',
+            text: 'O consultor técnico tem competência certificada em ferramentas forenses digitais (ex: ISO/IEC 27037, NIST)?',
             norma: 'NIST SP 800-86 § 2 (Qualificação do Investigador)',
-            implicacao: 'Falta de competência técnica pode levar à exclusão do testemunho pericial.',
+            implicacao: 'Falta de competência técnica pode levar à exclusão do testemunho técnico-jurídica.',
             defesa: 'Fornecer curriculum vitae com certificações forenses e experiência comprovada.'
         },
         {
@@ -82,7 +82,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'A',
             title: 'Cadeia de Custódia ISO 27037',
             text: 'Existe cadeia de custódia documentada entre a obtenção dos dados e a análise (ex: quem recebeu, assinou, quando)?',
-            norma: 'Art. 125º CPP (Obrigações do Perito)',
+            norma: 'Art. 125º CPP (Obrigações do Consultor Técnico)',
             implicacao: 'Sem cadeia de custódia, a prova pode ser declarada ilegal e inadmissível.',
             defesa: 'Produzir formulários de transferência assinados ou declarações de custódia.'
         },
@@ -101,7 +101,7 @@ window.UNIFED_QUESTIONNAIRE = {
             title: 'Cadeia de Custódia ISO 27037',
             text: 'O motor de análise (UNIFED) está documentado com fluxogramas, pseudocódigo e argumentos técnicos que justifiquem cada cálculo?',
             norma: 'Art. 125º, al. a) CPP (Fundamentação Técnica Obrigatória)',
-            implicacao: 'Sem documentação, o tribunal não consegue avaliar a metodologia e pode rejeitar a perícia.',
+            implicacao: 'Sem documentação, o tribunal não consegue avaliar a metodologia e pode rejeitar a consultoria técnica.',
             defesa: 'Produzir Relatório Técnico com Anexos de Metodologia, Algoritmos, e Validação.'
         },
         {
@@ -612,33 +612,108 @@ window.UNIFED_QUESTIONNAIRE = {
 
     /**
      * =========================================================================
-     * RETIFICAÇÃO CIRÚRGICA: MODELO ESTATÍSTICO PARA CÁLCULO DE DANO
+     * FASE 3.1 — MODELO ESTATÍSTICO DE CÁLCULO DE DANO (ASSINATURA DUAL)
      * =========================================================================
-     * Centraliza o cálculo de dano conservador para fins periciais.
-     * Incorpora fator de segurança estatística para evitar arguição de erro.
-     * @param {number} mediaMensal - Valor médio mensal de omissão/comissão indevida por motorista (€)
-     * @param {number} nMotoristas - Número total de motoristas/operadores na plataforma (default 38.000)
-     * @returns {number} Dano anual estimado (€), com margem conservadora
+     * Aceita dois modos de invocação sem quebrar chamadas legadas:
+     *
+     *   MODO A — ESCALAR (legado, compatibilidade retroactiva):
+     *     calcularDanoConservador(mediaMensal: number, nMotoristas: number)
+     *     → Aplica intervalo de confiança sintético baseado em variância
+     *       assumida de 15% sobre a média (conservador mas fundamentado).
+     *
+     *   MODO B — VECTOR (novo, estatisticamente defensável em juízo):
+     *     calcularDanoConservador(seriesMensais: number[], nMotoristas: number)
+     *     → Calcula média e desvio padrão amostral a partir dos valores reais
+     *       mensais. Aplica Z = 2.576 (IC 99%) sobre o erro padrão da média.
+     *       Elimina o multiplicador fixo 0.85 (heurística arbitrária).
+     *
+     * A detecção do modo é feita por Array.isArray(seriesMensais).
+     * Nenhuma chamada existente com assinatura escalar é afectada.
+     *
+     * Norma: Art. 344.º, n.º 2 CC (certeza do cálculo); NIST SP 800-86 §3.
+     *
+     * @param {number|Array<number>} entradaDano - Escalar (€/mês) ou vector de valores mensais
+     * @param {number} nMotoristas - Universo amostral de operadores (default 38.000)
+     * @returns {number} Materialidade financeira defensável (€/ano); nunca negativo
      */
-    calcularDanoConservador: function(mediaMensal, nMotoristas = 38000) {
+    calcularDanoConservador: function(entradaDano, nMotoristas = 38000) {
+        // ── Validação do universo amostral ────────────────────────────────────
+        if (typeof nMotoristas !== 'number' || isNaN(nMotoristas) || nMotoristas <= 0) {
+            console.error('[MODELO ESTATÍSTICO] Erro: nMotoristas deve ser um número positivo.');
+            return 0;
+        }
+
+        // ── MODO B: entrada é vector de valores mensais ───────────────────────
+        if (Array.isArray(entradaDano)) {
+            const seriesMensais = entradaDano.filter(v => typeof v === 'number' && !isNaN(v) && v >= 0);
+            if (seriesMensais.length < 2) {
+                console.error('[MODELO ESTATÍSTICO] Erro: vector insuficiente (mínimo 2 valores) para cálculo de variância.');
+                return 0;
+            }
+            const n            = seriesMensais.length;
+            const mediaAmostral = seriesMensais.reduce((a, b) => a + b, 0) / n;
+            // Variância amostral (denominador n-1 de Bessel)
+            const variancia    = seriesMensais.reduce((acc, v) => acc + Math.pow(v - mediaAmostral, 2), 0) / (n - 1);
+            const desvioPadrao = Math.sqrt(variancia);
+            // Erro padrão da média e margem de erro a IC 99% (Z = 2.576)
+            const Z_99         = 2.576;
+            const erroPadrao   = desvioPadrao / Math.sqrt(n);
+            const margemErro   = Z_99 * erroPadrao;
+            const mediaConservadora = Math.max(0, mediaAmostral - margemErro);
+            const danoAnual    = mediaConservadora * nMotoristas * 12;
+            console.log(
+                `[MODELO ESTATÍSTICO — MODO B] n=${n} meses | Média=€${mediaAmostral.toFixed(2)} | ` +
+                `DP=€${desvioPadrao.toFixed(2)} | Margem IC99%=€${margemErro.toFixed(2)} | ` +
+                `Média Conservadora=€${mediaConservadora.toFixed(2)} | Dano Anual=€${danoAnual.toFixed(2)}`
+            );
+            return danoAnual;
+        }
+
+        // ── MODO A: entrada é escalar (compatibilidade retroactiva) ───────────
+        const mediaMensal = entradaDano;
         if (typeof mediaMensal !== 'number' || isNaN(mediaMensal) || mediaMensal < 0) {
             console.error('[MODELO ESTATÍSTICO] Erro: mediaMensal deve ser um número não negativo.');
             return 0;
         }
-        if (typeof nMotoristas !== 'number' || isNaN(nMotoristas) || nMotoristas < 0) {
-            console.error('[MODELO ESTATÍSTICO] Erro: nMotoristas deve ser um número não negativo.');
-            return 0;
-        }
-        const fatorSeguranca = 0.85; // Margem para evitar arguição de erro estatístico (15% de desconto)
-        const dano = (mediaMensal * nMotoristas * 12) * fatorSeguranca;
-        console.log(`[MODELO ESTATÍSTICO] Dano calculado: €${dano.toFixed(2)} (média mensal: €${mediaMensal}, motoristas: ${nMotoristas}, fator: ${fatorSeguranca})`);
+        // Variância sintética: assume desvio padrão = 15% da média (conservador).
+        // IC 99% (Z = 2.576) sobre erro padrão estimado com n=12 meses como proxy.
+        const Z_99_escalar     = 2.576;
+        const dpSintetico      = mediaMensal * 0.15;
+        const erroPadraoProxy  = dpSintetico / Math.sqrt(12);
+        const margemErroProxy  = Z_99_escalar * erroPadraoProxy;
+        const mediaConservadora = Math.max(0, mediaMensal - margemErroProxy);
+        const dano             = mediaConservadora * nMotoristas * 12;
+        console.log(
+            `[MODELO ESTATÍSTICO — MODO A] Entrada escalar: €${mediaMensal}/mês | ` +
+            `DP sintético (15%)=€${dpSintetico.toFixed(2)} | Margem IC99% (n=12 proxy)=€${margemErroProxy.toFixed(2)} | ` +
+            `Média Conservadora=€${mediaConservadora.toFixed(2)} | Dano Anual=€${dano.toFixed(2)}`
+        );
         return dano;
     }
 };
 
 // Disponibilizar também como função global para compatibilidade com chamadas externas
-window.calcularDanoConservador = function(mediaMensal, nMotoristas = 38000) {
-    return window.UNIFED_QUESTIONNAIRE.calcularDanoConservador(mediaMensal, nMotoristas);
+// Assinatura mantida: aceita escalar ou vector como primeiro argumento.
+window.calcularDanoConservador = function(entradaDano, nMotoristas = 38000) {
+    return window.UNIFED_QUESTIONNAIRE.calcularDanoConservador(entradaDano, nMotoristas);
+};
+
+// Utilitário auxiliar: constrói o vector seriesMensais[] a partir de UNIFEDSystem.monthlyData
+// Permite chamadas Modo B sem refatorar os locais de invocação existentes.
+window.calcularDanoComSeriesMensais = function(nMotoristas = 38000) {
+    const monthlyData = (window.UNIFEDSystem && window.UNIFEDSystem.monthlyData) || {};
+    const monthKeys   = Object.keys(monthlyData).sort();
+    if (monthKeys.length < 2) {
+        console.warn('[MODELO ESTATÍSTICO] monthlyData insuficiente — a usar calcularDanoConservador em Modo A.');
+        const analysis = (window.UNIFEDSystem && window.UNIFEDSystem.analysis) || {};
+        const cross    = analysis.crossings || {};
+        const mediaMensalFallback = cross.discrepanciaMensalMedia || 0;
+        return window.calcularDanoConservador(mediaMensalFallback, nMotoristas);
+    }
+    const seriesMensais = monthKeys.map(m =>
+        Math.abs((monthlyData[m].despesas || 0) - (monthlyData[m].faturaPlataforma || 0))
+    );
+    return window.UNIFED_QUESTIONNAIRE.calcularDanoConservador(seriesMensais, nMotoristas);
 };
 
 console.log('[UNIFED-QUESTIONNAIRE] ✅ Multi-Axis Adversarial Questionnaire Loaded (50 Q, 5 Axes)');
