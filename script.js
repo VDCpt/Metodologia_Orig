@@ -8928,15 +8928,20 @@ window._syncPureDashboard = (function() {
                     `A omissão de ${_pctOmissao}% do universo de comissões nos extratos vs faturas sugere algoritmo deliberado de subestimação, não erro aleatório.`,
                     `The omission of ${_pctOmissao}% of the commission universe in statements vs invoices suggests deliberate underestimation algorithm, not random error.`);
 
-                // ── PATCH P20 — patch_unifed_macro_v13 (Item 2) ───────────────────
-                // ANTERIOR: o valor "€458,84/mês" não tinha fonte verificável em
-                // cross.* (resíduo identificado no relatório, achado #12).
-                // CORRIGIDO: removido o valor fixo; o texto reporta apenas
-                // _pctOmissao (verificado, derivado de cross.percentagemOmissao)
-                // e sinaliza explicitamente o dano mensal como pendente.
+                // ── PATCH P32 — patch_unifed_macro_v13 (Secção 2.A, evolui P20) ─────
+                // ANTERIOR (P20): valor mensal removido por falta de fonte
+                // verificável; texto sinalizava "pendente de verificação".
+                // CORRIGIDO: mediaMensalOmissao = cross.impactoMensalMercado / 38000
+                // (= discrepanciaMensalMedia, Patch D1) — a MESMA base que produz
+                // o checksum 1.704.998.820,00€. Valor traçável, não fantasma.
+                // Espelha o parágrafo equivalente no PDF (Patch P30).
+                const _mediaMensalOmissao = (cross.impactoMensalMercado || 0) / 38000;
+                const _danoMensalFmt = window.formatForensicCurrency
+                    ? window.formatForensicCurrency(_mediaMensalOmissao)
+                    : fmt(_mediaMensalOmissao);
                 _setBilingual('pure-wc-finding-4',
-                    `O padrão de omissão sustentado (${_pctOmissao}%) sustenta análise de irregularidade comercial agravada (Art. 405.º CC). O dano fiscal mensal estimado aguarda verificação pericial complementar.`,
-                    `The sustained omission pattern (${_pctOmissao}%) supports qualified tax fraud analysis (Art. 405 CC). The estimated monthly fiscal damage awaits complementary expert verification.`);
+                    `O padrão de omissão sustentado (${_pctOmissao}%) + dano fiscal mensal apurado de ${_danoMensalFmt} sustenta a análise de irregularidade comercial agravada (Art. 405.º CC).`,
+                    `The sustained omission pattern (${_pctOmissao}%) + calculated monthly fiscal damage of ${_danoMensalFmt} supports qualified tax fraud analysis (Art. 405 CC).`);
 
                 // pure-wc-rec-text: projeção 7 anos (€1.743.598.080 → impactoSeteAnosMercado real)
                 _setBilingual('pure-wc-rec-text',

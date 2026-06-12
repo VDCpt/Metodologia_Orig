@@ -312,6 +312,50 @@
         ].join('\n');
     }
 
+    // ── PATCH P33 — patch_unifed_macro_v13 (Secção 3.A) ──────────────────────
+    // PROTOCOLO DE CONTRA-PERÍCIA FORENSE (PEF-UNIFED-02): PDF dedicado para
+    // perito independente/entidades judiciais, com os parâmetros matemáticos
+    // bloqueados (verificacaoMat, gerada por _verificacaoMatematica — mesma
+    // função usada em 08_VERIFICACAO_MATEMATICA.json) e o veredicto de
+    // coerência. Campos confirmados: input.omissaoCustos_acumulado,
+    // input.mesesDados, input.mediaMensalOmissao, checksumEsperado,
+    // coerenciaTotal, veredicto.
+    async function _gerarPDFInstrucoesTribunal(verificacaoMat, sys) {
+        if (typeof pdfMake === 'undefined') {
+            console.warn('[CONTRAPERICIA] pdfMake indisponível. PDF não gerado.');
+            return null;
+        }
+
+        const docDef = {
+            pageSize: 'A4',
+            pageMargins: [50, 60, 50, 60],
+            content: [
+                { text: 'PROTOCOLO DE CONTRA-PERÍCIA FORENSE (PEF-UNIFED-02)', fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 10], color: '#b91c1c' },
+                { text: 'Instruções e Manifesto de Integridade para Perito Independente e Entidades Judiciais', fontSize: 10, alignment: 'center', color: '#475569', margin: [0, 0, 0, 25] },
+
+                { text: 'Este pacote contém a integralidade dos artefactos digitais, logs forenses, cadeia de custódia e ficheiros de configuração (sem chaves privadas) necessários para a reconstituição matemática estrita do cálculo pericial apresentado pela acusação.', margin: [0, 0, 0, 15], alignment: 'justify' },
+
+                { text: '1. DIRETRIZES DE VERIFICAÇÃO', style: 'h2' },
+                { text: 'Nos termos da ISO/IEC 27037:2012, o perito revisor deve:\n\n1. Validar o Master Hash listado abaixo contra todos os artefactos incluídos neste ZIP.\n2. Recalcular a fórmula determinística de Dano:\n   (Omissão de Custos / Meses) × 38.000 × 12 × 7\n3. Inspecionar o ficheiro 02_LOG_FORENSE_COMPLETO.json para descartar adulteração cronológica (Time Stomping).', margin: [0, 0, 0, 15] },
+
+                { text: '2. PARÂMETROS MATEMÁTICOS BLOQUEADOS', style: 'h2' },
+                { text: `• Omissão de Custos Acumulada: ${verificacaoMat.input.omissaoCustos_acumulado}\n• Meses com Dados: ${verificacaoMat.input.mesesDados}\n• Média Mensal de Omissão: ${verificacaoMat.input.mediaMensalOmissao}\n• Dano Global (Checksum de Referência): ${verificacaoMat.checksumEsperado} €`, margin: [0, 0, 0, 20] },
+
+                { text: '3. VEREDICTO DE INTEGRIDADE LOCAL', style: 'h2' },
+                { text: `O motor de autodiagnóstico reporta: ${verificacaoMat.veredicto}`, bold: true, color: verificacaoMat.coerenciaTotal ? '#15803d' : '#b91c1c', margin: [0, 0, 0, 30] },
+
+                { text: `Sessão Pericial Original: ${sys.sessionId || 'N/A'}\nData de Emissão do Pacote: ${new Date().toLocaleString('pt-PT')}`, fontSize: 9, color: '#64748b' }
+            ],
+            styles: { h2: { fontSize: 12, bold: true, margin: [0, 10, 0, 8], color: '#1e3a8a', decoration: 'underline' } }
+        };
+
+        return new Promise((resolve) => {
+            pdfMake.createPdf(docDef).getBlob((blob) => {
+                resolve(blob);
+            });
+        });
+    }
+
     // ── Função principal de exportação ───────────────────────────────────────
     async function exportarPacoteContraperiria() {
         const btn = document.getElementById('unifed-contraperiria-btn');
@@ -429,6 +473,13 @@
             artefactos.forEach(a => zip.file(pasta + a.nome, a.json));
             zip.file(pasta + '10_INSTRUCOES_VERIFICACAO.txt',   instrucoesTxt);
             zip.file(pasta + '00_README_CHECKSUMS.txt',         checksumsTxt);
+
+            // ── PATCH P33b — patch_unifed_macro_v13 (Secção 3.B) ────────────
+            // Gerar e anexar o PDF Exclusivo PEF-UNIFED-02
+            const pdfInstrucoesBlob = await _gerarPDFInstrucoesTribunal(verificacaoMat, sys);
+            if (pdfInstrucoesBlob) {
+                zip.file(pasta + 'UNIFED_Protocolo_ContraPericia_Tribunal.pdf', pdfInstrucoesBlob);
+            }
 
             const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
 

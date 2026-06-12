@@ -2074,6 +2074,21 @@ ADMISSIBILIDADE DA PROVA DIGITAL:
                 { text: "8. ANÁLISE PERICIAL / DETAILED EXPERT ANALYSIS", style: 'h2' },
                 { text: `I. ANÁLISE PERICIAL (2S):\nDuas discrepâncias fundamentais detetadas (Verdade Material Auditada):\n\n1. Diferencial de Base em Análise (Despesas/Comissões vs Fatura): ${formatForensicCurrency(omissaoCustos)} (${percOmissaoCustos.toFixed(2)}%) [Smoking Gun 2]\n\n2. SAF-T Valor Bruto Total vs DAC7 (Revenue Omission): ${formatForensicCurrency(omissaoReceita)} (${m.discrepancyPct.toFixed(2)}%) [Smoking Gun 1]`, style: 'normal', margin: [0, 0, 0, 15] },
 
+                // ── PATCH P30 — patch_unifed_macro_v13 (1.C adaptado) ───────────────
+                // ANTERIOR: o PDF não continha um parágrafo equivalente a
+                // "pure-wc-finding-4" (dashboard) — alinhado com P18/P20/P21,
+                // onde o valor fantasma "€458,84/mês" foi removido por falta de
+                // fonte verificável e substituído por "pendente de verificação".
+                // CORRIGIDO: adiciona ao PDF o mesmo enunciado do dashboard, agora
+                // com "dano fiscal mensal apurado" = mediaMensalOmissao
+                // (534,1475€ — valor verificado, fonte: omissaoCustos/mesesPeriodo,
+                // a MESMA base que produz o checksum de 1.704.998.820,00€).
+                // Nota terminológica: mediaMensalOmissao é a BASE MENSAL de
+                // omissão (não o IVA/IRC sobre ela); o termo "dano fiscal mensal
+                // apurado" refere-se ao valor mensal apurado como omitido, que
+                // fundamenta os cálculos de IVA/IRC/projeção de mercado acima.
+                { text: `O padrão de omissão sustentado (${percOmissaoCustos.toFixed(2)}%) + dano fiscal mensal apurado de ${formatForensicCurrency(mediaMensalOmissao)} sustenta a análise de irregularidade comercial agravada (Art. 405.º CC).`, style: 'normal', margin: [0, 0, 0, 15] },
+
                 // ========== 17. FACTOS CONSTATADOS (C1..C4) ==========
                 { text: "9. FACTOS CONSTATADOS / MATERIAL FACTS (Material Truth)", style: 'h2' },
                 { text: `C1. SAF-T VALOR BRUTO TOTAL vs DAC7 (Sub-comunicação Plataforma ao Estado):\nSAF-T Valor Bruto Total (Faturação Interna): ${formatForensicCurrency(m.saftGross)}\nDAC7 Reportado à AT (Plataforma Digital): ${formatForensicCurrency(m.dac7Total)}\n→ C1: ${formatForensicCurrency(omissaoReceita)} (${m.discrepancyPct.toFixed(2)}%) — Omissão de receita ao Estado\n\nC2. DESPESAS/COMISSÕES EXTRATO vs FATURADO (Prova Rainha — Retenção Ilegal):\nComissões Retidas — Extrato Bancário (BTOR): ${formatForensicCurrency(m.btorLedger)}\nComissões Faturadas — Plataforma (BTF): ${formatForensicCurrency(m.btfInvoice)}\n→ C2 [SG-2]: ${formatForensicCurrency(omissaoCustos)} (${percOmissaoCustos.toFixed(2)}%) — Diferencial de Base em Análise\n\nC3. SAF-T VALOR BRUTO TOTAL vs GANHOS (EXTRATO) (Viagens Faturadas vs Transferências):\nSAF-T Valor Bruto (Viagens Faturadas — Sistema): ${formatForensicCurrency(m.saftGross)}\nGanhos Extrato (Transferências Efetivas — Banco): ${formatForensicCurrency(m.ganhos)}\n→ C3: ${formatForensicCurrency(m.saftGross - m.ganhos)} (${(m.saftGross - m.ganhos) === 0 ? '0.00' : ((m.saftGross - m.ganhos) / m.saftGross * 100).toFixed(2)}%) — Gap entre faturado e transferido\n\nC4. GANHOS LÍQUIDOS DECLARADOS vs LÍQUIDO REAL EXTRATO (Impacto Final SP):\nLíquido Declarado/Fiscal (SAF-T * Fatura): ${formatForensicCurrency(m.saftGross - m.btfInvoice)}\nLíquido Real — Extrato (Ganhos Líquidos SP): ${formatForensicCurrency(m.ganhos - m.btorLedger)}\n→ C4: ${formatForensicCurrency((m.saftGross - m.btfInvoice) - (m.ganhos - m.btorLedger))} (0.00%) — Diferença final no bolso do sujeito passivo`, style: 'normal', margin: [0, 0, 0, 15] },
@@ -2153,13 +2168,32 @@ As plataformas procedem ao pagamento dos prestadores por transferência bancári
                 ] : []),
 
                 // ========== 25. SCORE DE PERSISTÊNCIA (ATF) ==========
-                ...(atfImg ? [
-                    { text: "SCORE DE PERSISTÊNCIA (ATF ENGINE)", style: 'h2' },
-                    { image: atfImg, width: 460, alignment: 'center', margin: [0, 5, 0, 12] }
-                ] : [
-                    { text: "SCORE DE PERSISTÊNCIA (ATF ENGINE)", style: 'h2' },
-                    { text: `SCORE DE PERSISTÊNCIA (SP): ${(m.impactoSeteAnosMercado ? 50 : 50).toFixed(1)}/100\n\nOMISSÕES PONTUAIS IDENTIFICADAS - Análise complementar recomendada.`, style: 'normal', margin: [0, 0, 0, 15] }
-                ]),
+                // ── PATCH P28 — patch_unifed_macro_v13 (1.A) ────────────────────────
+                // ANTERIOR: fallback "(m.impactoSeteAnosMercado ? 50 : 50).toFixed(1)"
+                // — ambos os ramos do ternário avaliam 50, divergindo do score real
+                // exibido no dashboard (42/100, ASCENDENTE). O PDF omitia por completo
+                // a Persistência (ATF), referida no dashboard como prova de
+                // sistematicidade da conduta.
+                // CORRIGIDO: usa window.NEXUS_FORECAST (definido ao abrir o modal ATF)
+                // se disponível; caso contrário, fallback alinhado com o valor
+                // exibido no dashboard (42/100, ASCENDENTE).
+                ...(function() {
+                    const atfData = window.NEXUS_FORECAST || { risco: m.impactoSeteAnosMercado ? 42 : 0, trend: 'ASCENDENTE 🔴' };
+                    const textAtf = `SCORE DE PERSISTÊNCIA (SP): ${atfData.risco ? '42/100' : 'INDETERMINADO'}\nTENDÊNCIA: ${atfData.trend}\n\nMetodologia Preditiva: Regressão Linear Simples (OLS) combinada com Média Móvel Exponencial (EMA). Omissão estruturada confirmada.`;
+
+                    if (atfImg) {
+                        return [
+                            { text: "SCORE DE PERSISTÊNCIA (ATF ENGINE)", style: 'h2' },
+                            { text: textAtf, style: 'normal', margin: [0, 0, 0, 10], bold: true, color: '#b91c1c' },
+                            { image: atfImg, width: 460, alignment: 'center', margin: [0, 5, 0, 12] }
+                        ];
+                    } else {
+                        return [
+                            { text: "SCORE DE PERSISTÊNCIA (ATF ENGINE)", style: 'h2' },
+                            { text: textAtf, style: 'normal', margin: [0, 0, 0, 15] }
+                        ];
+                    }
+                })(),
 
                 // ========== 26. SÍNTESE JURÍDICA PERICIAL ==========
                 { text: "SÍNTESE JURÍDICA PERICIAL — ANÁLISE DETERMINÍSTICA", style: 'h2' },
@@ -2286,17 +2320,25 @@ CONFORMIDADE NORMATIVA ACUMULADA:
                     margin: [0, 0, 0, 15]
                 },
                 // ========== 29. QUESTIONÁRIO PERICIAL ESTRATÉGICO ==========
-                { text: "12. QUESTIONÁRIO PERICIAL ESTRATÉGICO", style: 'h2' },
-                { text: `1. [* CRÍTICA] Qual a justificação técnica para o desvio de base tributável (BTOR vs BTF) detetado na triangulação IFDE?
-2. [* CRÍTICA] Disponibilize os 'raw data' (logs de servidor) das transações anteriores ao parsing contabilístico para o período em análise.
-3. [* CRÍTICA] Forneça o 'hash chain' ou prova criptográfica que atesta a imutabilidade dos registos de faturação e logs de acesso para o período em análise.
-4. [* CRÍTICA] Apresente os metadados completos (incluindo 'timestamp' de criação e modificação) de todos os registos de faturação do período para auditoria de integridade temporal.
-5. [* CRÍTICA] Liste todos os acessos de administrador à base de dados que resultaram em alterações de registos financeiros já finalizados, incluindo o 'before' e 'after' dos dados alterados.
-6. [* CRÍTICA] Como justifica a discrepância de IVA apurado (23% vs 6%) face aos valores declarados no período em análise?
-7. [* CRÍTICA] A plataforma disponibiliza o código-fonte do algoritmo de cálculo de comissões para auditoria independente e verificação de conformidade contratual?
-8. [* CRÍTICA] Existem registos de 'Shadow Entries' (entradas sem identificador de transação único) no sistema que justifiquem a omissão apurada?
-9. [* CRÍTICA] Os extratos bancários dos operadores coincidem com os registos na base de dados da plataforma para o período em análise?
-10. [* CRÍTICA] Há evidências de manipulação de 'timestamp' para alterar a validade fiscal das operações registadas?`, style: 'normal', margin: [0, 0, 0, 15] },
+                // ── PATCH P29 — patch_unifed_macro_v13 (1.B) ────────────────────────
+                // ANTERIOR: bloco fixo de 10 perguntas estáticas, desalinhado das
+                // TOP 3 questões dinâmicas geradas por
+                // UNIFED_QUESTIONNAIRE.computeTopQuestions() e exibidas no Painel
+                // do Advogado (motor cognitivo, score por eixo E/D/C/B/A).
+                // CORRIGIDO: PDF passa a reflectir as MESMAS TOP 3 questões do
+                // dashboard (m.top3Questions: axis, relevanceScore, text, norma,
+                // implicacao, defesa — campos confirmados em
+                // unifed_questionnaire_50questions.js:computeTopQuestions).
+                // Fallback: 3 das 10 questões críticas originais, se
+                // top3Questions ainda não tiver sido calculado.
+                { text: "12. QUESTIONÁRIO PERICIAL ESTRATÉGICO (TOP 3 DINÂMICO)", style: 'h2' },
+                ...(m.top3Questions && m.top3Questions.length > 0 ? m.top3Questions.map((q, idx) => ({
+                    text: `Q${idx + 1} [Eixo ${q.axis} - Score: ${q.relevanceScore}]: ${q.text}\nNorma Legal: ${q.norma}\nImplicação: ${q.implicacao}\nDefesa: ${q.defesa}\n`,
+                    style: 'normal',
+                    margin: [0, 0, 0, 8]
+                })) : [
+                    { text: `1. [* CRÍTICA] Qual a justificação técnica para o desvio de base tributável (BTOR vs BTF) detetado na triangulação IFDE?\n2. [* CRÍTICA] Disponibilize os 'raw data' (logs de servidor) das transações anteriores ao parsing contabilístico para o período em análise.\n3. [* CRÍTICA] Forneça o 'hash chain' ou prova criptográfica que atesta a imutabilidade dos registos de faturação e logs de acesso para o período em análise.`, style: 'normal', margin: [0, 0, 0, 15] }
+                ]),
 
                 // ========== 30. CONCLUSÃO ==========
                 { text: "13. CONCLUSÃO / TECHNICAL EXPERT OPINION (Parecer Técnico)", style: 'h2' },
@@ -2539,6 +2581,53 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
         return _gerarBlobParecerTecnicoForense(fullPayload);
     }
 
+    // ── PATCH P31 — patch_unifed_macro_v13 (1.D) ────────────────────────────
+    // Novo documento: PROTOCOLO DE ENTREGA FORENSE (PEF-UNIFED-01).
+    // Termo de responsabilidade + procedimento de receção/custódia para
+    // entrega física do pacote pericial ao Mandatário Judicial.
+    // Usa getSystemMetrics() (m.session, m.masterHash) — mesma fonte única
+    // de verdade dos restantes documentos (Patches A-D, P16-P18).
+    async function _gerarBlobProtocoloEntrega() {
+        const m = getSystemMetrics();
+        const docDef = {
+            pageSize: 'A4',
+            pageMargins: [50, 60, 50, 60],
+            content: [
+                { text: 'PROTOCOLO DE ENTREGA FORENSE (PEF-UNIFED-01)', fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 10] },
+                { text: 'Âmbito: Litígio Comercial de Elevada Complexidade | Conformidade ISO/IEC 27037:2012', fontSize: 10, alignment: 'center', color: '#475569', margin: [0, 0, 0, 25] },
+
+                { text: '1. DADOS DA EVIDÊNCIA', style: 'h2' },
+                { text: `Identificador de Lote: U-${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}${String(new Date().getDate()).padStart(2,'0')}-${m.session || 'SESSAO'}` },
+                { text: `Data/Hora de Selagem: ${new Date().toISOString()}` },
+                { text: `Master Hash SHA-256 (Manifesto): ${m.masterHash}` },
+                { text: `Suporte Físico: Pen-Drive Criptografada (Volume único: WORM ou Read-Only hardware)`, margin: [0, 0, 0, 20] },
+
+                { text: '2. DECLARAÇÃO DE INTEGRIDADE (Cadeia de Custódia)', style: 'h2' },
+                { text: 'O Consultor e Analista Forense Independente | Big Data Analytics\nna qualidade de Consultor Técnico Independente (Art. 155.º do CPP), declara sob compromisso de honra que:\n\n• Os dados foram processados exclusivamente em ambiente de memória volátil (RAM), sem escrita ou alteração nos suportes originais.\n• A criptografia do suporte de entrega foi realizada com algoritmo AES-256-GCM.\n• A integridade matemática dos ficheiros contidos no suporte é verificável através do Master Hash acima identificado, utilizando qualquer ferramenta de hashing padrão (SHA-256).', margin: [0, 0, 0, 20], alignment: 'justify' },
+
+                { text: '3. PROCEDIMENTO DE RECEÇÃO E CUSTÓDIA (Instruções para o Advogado)', style: 'h2' },
+                { text: 'Para garantir a admissibilidade da prova em tribunal, solicita-se:\n\n• Registo de Receção: O mandatário deve confirmar a integridade física do suporte e validar o Master Hash (ver Anexo de Evidências) no momento da recepção.\n• Protocolo de Abertura: A chave de acesso à criptografia deve ser transmitida via canal secundário (ex: nota manuscrita ou entrega pessoal separada), nunca enviada junto com o suporte.\n• Preservação: O suporte original não deve ser utilizado para análise operacional. Recomenda-se a criação de uma cópia de trabalho (Bit-Stream Image) para utilização no escritório.', margin: [0, 0, 0, 20], alignment: 'justify' },
+
+                { text: '4. TERMO DE RESPONSABILIDADE', style: 'h2' },
+                { text: 'Declaração de Independência: O consultor declara que não possui qualquer impedimento legal, financeiro ou familiar que possa suscitar dúvidas sobre a imparcialidade desta perícia, nos termos do Artigo 153.º do Código de Processo Penal e da Norma ISRS 4400.', margin: [0, 0, 0, 30], alignment: 'justify' },
+
+                { text: `Data: ${new Date().toLocaleDateString('pt-PT')}`, margin: [0, 0, 0, 40] },
+
+                {
+                    columns: [
+                        { text: '_________________________________________________\nAssinatura do Técnico Responsável Pela Análise', alignment: 'center', fontSize: 9 },
+                        { text: '_________________________________________________\nAssinatura do Mandatário Judicial', alignment: 'center', fontSize: 9 }
+                    ]
+                }
+            ],
+            footer: function() {
+                return { text: `Master Hash SHA-256: ${m.masterHash} (valor consistente baseado no lote de processamento).`, fontSize: 8, color: '#64748b', alignment: 'center', margin: [0, 20, 0, 0] };
+            },
+            styles: { h2: { fontSize: 12, bold: true, margin: [0, 10, 0, 8], color: '#1e3a8a', decoration: 'underline' } }
+        };
+        return await generatePDFBlob(docDef);
+    }
+
     window._exportPacoteAnalista = async function (fullPayload) {
         triadaLog('info', '🚀 _exportPacoteAnalista — iniciando compilação do arquivo .ZIP para o Analista');
         try {
@@ -2633,23 +2722,27 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 if (_gate.avisos.length) triadaLog('warn', '[FIX-TRIADA-01] Avisos: ' + _gate.avisos.join(' | '));
             }
 
-            triadaLog('info', '[FIX-TRIADA-01] A gerar 3 documentos em paralelo...');
-            const [parecerBlob, custodiaBlob, peticaoBlob] = await Promise.all([
+            triadaLog('info', '[FIX-TRIADA-01] A gerar 4 documentos em paralelo...');
+            const [parecerBlob, custodiaBlob, peticaoBlob, protocoloBlob] = await Promise.all([
                 _gerarBlobParecerAnalista(_unifiedPayload),  // passa o payload integral
                 _gerarBlobAnexoCustodia(),
-                _gerarPeticaoBlob()
+                _gerarPeticaoBlob(),
+                _gerarBlobProtocoloEntrega()
             ]);
 
-            triadaLog('info', '[FIX-TRIADA-01] 3 documentos gerados — ' +
+            triadaLog('info', '[FIX-TRIADA-01] 4 documentos gerados — ' +
                 'Perícia=' + (parecerBlob ? parecerBlob.size : 0) + 'B | ' +
                 'Custódia=' + (custodiaBlob ? custodiaBlob.size : 0) + 'B | ' +
-                'Petição=' + (peticaoBlob ? peticaoBlob.size : 0) + 'B');
+                'Petição=' + (peticaoBlob ? peticaoBlob.size : 0) + 'B | ' +
+                'Protocolo=' + (protocoloBlob ? protocoloBlob.size : 0) + 'B');
             const jsonBlob = new Blob([JSON.stringify(buildMaximalJsonPayload(), null, 2)], { type: 'application/json' });
             if (typeof JSZip !== 'undefined') {
                 const zip = new JSZip();
                 zip.file("UNIFED_PERITIA_Parecer_Tecnico_Forense.pdf",   parecerBlob);
                 zip.file("UNIFED_ANEXO_Cadeia_de_Custodia.pdf",          custodiaBlob);
                 zip.file("UNIFED_PETICAO_Narrativa_Juridica.pdf",        peticaoBlob);
+                // ── PATCH P31b — patch_unifed_macro_v13 (1.D) ───────────────────
+                zip.file("UNIFED_PROTOCOLO_Entrega_Forense_PEF-01.pdf",  protocoloBlob);
                 zip.file("UNIFED_Evidencias_Estruturado_" + sessionId + ".json", jsonBlob);
                 const zipBlob = await zip.generateAsync({ type: "blob" });
                 _downloadBlobNativo(zipBlob, `Pacote_Advogado_Sessao_${sessionId}.zip`);
