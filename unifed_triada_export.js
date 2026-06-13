@@ -559,14 +559,41 @@
     // =========================================================================
     // ELIMINAÇÃO DO FALLBACK ARITMÉTICO (COURT-READY-02)
     // =========================================================================
+    // ── FASE 3.1 — FIX-HASH-SYNC: safeGenerateMasterBatchHash prioriza chainOfCustody ──
+    // Problema: após performAudit(), o chainOfCustody.seal() actualiza o masterHash
+    // definitivo, mas as funções de exportação liam UNIFEDSystem.masterHash que podia
+    // estar desactualizado. Cadeia de prioridade:
+    //   1. chainOfCustody.masterHash (mais recente — após seal())
+    //   2. UNIFEDSystem.masterHash (fallback imediato)
+    //   3. generateMasterBatchHash() (cálculo dinâmico)
+    //   4. CryptoJS (fallback criptográfico)
+    //   5. Erro estruturado (nunca retorna hash artificial)
+    // ──────────────────────────────────────────────────────────────────────────────────
     function safeGenerateMasterBatchHash() {
+        // 1. Fonte primária: chainOfCustody após seal()
+        const chainHash = window.UNIFED_FORENSIC_SYSTEM &&
+                          window.UNIFED_FORENSIC_SYSTEM.chainOfCustody &&
+                          typeof window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash === 'string' &&
+                          window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash.length === 64
+                          ? window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash
+                          : null;
+        if (chainHash) {
+            // Propagar para UNIFEDSystem para manter consistência
+            if (window.UNIFEDSystem) window.UNIFEDSystem.masterHash = chainHash;
+            if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = chainHash;
+            triadaLog('info', '✅ Master Hash obtido de chainOfCustody (fonte primária).');
+            return chainHash;
+        }
+        // 2. UNIFEDSystem.masterHash
         if (window.UNIFEDSystem && typeof window.UNIFEDSystem.masterHash === 'string' && window.UNIFEDSystem.masterHash.length === 64) {
             return window.UNIFEDSystem.masterHash;
         }
+        // 3. generateMasterBatchHash dinâmico
         if (typeof window.generateMasterBatchHash === 'function') {
             const hash = window.generateMasterBatchHash();
             if (typeof hash === 'string' && hash.length > 0) return hash;
         }
+        // 4. CryptoJS fallback
         const sessionId = window.UNIFED_SESSION_RESOLVER ? window.UNIFED_SESSION_RESOLVER._lastResolved : (window.UNIFEDSystem?.sessionId || 'UNKNOWN');
         const hashInput = sessionId + '-SECURE-LOTE-VAL-' + Date.now();
         if (typeof CryptoJS !== 'undefined' && CryptoJS.SHA256) {
@@ -574,6 +601,7 @@
             triadaLog('info', '✅ Hash de lote gerado com CryptoJS (SHA-256)');
             return hash;
         }
+        // 5. Erro estruturado — nunca retorna hash artificial
         const errMsg = 'ERR_CRYPTO_FALLBACK_NOT_ALLOWED: A integridade da prova digital exige SHA-256 verificado. O fallback aritmético foi desativado por questões de conformidade forense (ISO 27037).';
         triadaLog('error', errMsg);
         throw new Error(errMsg);
@@ -1493,7 +1521,10 @@
     // Substitui integralmente a implementação anterior, mantendo todas as correções
     // estruturais (R14-R21) e adicionando as secções avançadas do segundo ficheiro.
     // -------------------------------------------------------------------------
-    async function _gerarBlobParecerTecnicoForense(fullPayload) {
+    async function _gerarBlobParecerTecnicoForense(fullPayload, forcedMasterHash) {
+        // FASE 3.1 — FIX-HASH-SYNC: usar forcedMasterHash se fornecido, para garantir
+        // que o rodapé do PDF contém o hash definitivo após chainOfCustody.seal().
+        // Substitui a leitura de getSystemMetrics() que podia retornar valor desactualizado.
         triadaLog('info', '📄 Gerando blob do Parecer Técnico Forense (Analista) com todas as secções do Modelo 03-B');
 
         // ── Constante de Exclusão Fiscal (Quesito de Exclusão) ────────────────
@@ -1523,10 +1554,14 @@
         }
 
         let m = getSystemMetrics();
-        if (!m.masterHash || m.masterHash.length !== 64) {
+        // FASE 3.1 — FIX-HASH-SYNC: forcedMasterHash tem máxima prioridade
+        if (forcedMasterHash && typeof forcedMasterHash === 'string' && forcedMasterHash.length === 64) {
+            m.masterHash = forcedMasterHash;
+            triadaLog('info', '🔗 masterHash forçado no parecer: ' + forcedMasterHash.substring(0, 16) + '...');
+        } else if (!m.masterHash || m.masterHash.length !== 64) {
             try {
                 m.masterHash = safeGenerateMasterBatchHash();
-                window.UNIFED_HASH_PROPAGATOR.propagate(m.masterHash, '_gerarBlobParecerTecnicoForense');
+                if (window.UNIFED_HASH_PROPAGATOR) window.UNIFED_HASH_PROPAGATOR.propagate(m.masterHash, '_gerarBlobParecerTecnicoForense');
             } catch(e) {
                 triadaLog('error', 'Falha na geração do masterHash', e);
                 throw e;
@@ -2631,6 +2666,17 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     window._exportPacoteAnalista = async function (fullPayload) {
         triadaLog('info', '🚀 _exportPacoteAnalista — iniciando compilação do arquivo .ZIP para o Analista');
         try {
+            // ── FASE 3.1 — FIX-HASH-SYNC: forçar sincronização do masterHash ────────
+            // Garante que o masterHash final (após chainOfCustody.seal()) é propagado
+            // antes de qualquer geração de PDF ou JSON, eliminando divergências entre
+            // o dashboard e os documentos exportados.
+            const _freshHash = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash;
+            if (_freshHash && typeof _freshHash === 'string' && _freshHash.length === 64) {
+                window.UNIFEDSystem.masterHash = _freshHash;
+                if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = _freshHash;
+                triadaLog('info', '🔗 masterHash sincronizado de chainOfCustody antes da exportação: ' + _freshHash.substring(0, 16) + '...');
+            }
+            // ────────────────────────────────────────────────────────────────────────
             const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || "DEMO";
             // Passa o payload integral (se fornecido) para o gerador do PDF
             const parecerBlob = await _gerarBlobParecerAnalista(fullPayload);
@@ -2687,6 +2733,19 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 ? window.UNIFED_ExportEngine.getVerifiedPayload(snapshot.analysis)
                 : null;
             window.UNIFED_ACTIVE_EXPORT_PAYLOAD = _unifiedPayload;
+
+            // ── FASE 3.1 — FIX-HASH-SYNC: sincronizar masterHash de chainOfCustody ──
+            // Mesma lógica aplicada a _exportPacoteAnalista — garante que o PDF do
+            // advogado usa sempre o hash definitivo após chainOfCustody.seal().
+            const _freshHashAdv = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash;
+            if (_freshHashAdv && typeof _freshHashAdv === 'string' && _freshHashAdv.length === 64) {
+                window.UNIFEDSystem.masterHash = _freshHashAdv;
+                if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) {
+                    window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = _freshHashAdv;
+                }
+                triadaLog('info', '🔗 [ADV] masterHash sincronizado de chainOfCustody: ' + _freshHashAdv.substring(0, 16) + '...');
+            }
+            // ─────────────────────────────────────────────────────────────────────
 
             triadaLog('info', '[FIX-TRIADA-01] Snapshot master capturado — ' +
                 (_unifiedPayload
@@ -2841,7 +2900,7 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
             else fullMetrics = { session: sys.sessionId || 'N/A', masterHash: sys.masterHash || 'N/A', companyName: sys.analysis?.companyName || 'N/A', nif: sys.analysis?.nif || 'N/A', saftGross: sys.analysis?.saftGross || 0, dac7Total: sys.analysis?.dac7Total || 0, btorLedger: sys.analysis?.btorLedger || 0, btfInvoice: sys.analysis?.btfInvoice || 0, omissionPct: sys.analysis?.omissionPct || 0, verdict: sys.analysis?.verdict || 'N/A', top3Questions: sys.analysis?.top3Questions || [], merkleRoot: sys.analysis?.merkleRoot || 'N/A', monthlyData: sys.monthlyData || {}, auxiliaryData: sys.auxiliaryData || {}, totals: sys.analysis?.totals || {}, crossings: sys.analysis?.crossings || {}, twoAxis: sys.analysis?.twoAxis || {} };
         } catch(e) { console.warn('[ELASTIC] Erro ao obter métricas:', e); }
         const completePayload = {
-            metadata: { source: 'UNIFED-PROBATUM v1.0-COMMERCIAL-LITIGATION', timestamp: new Date().toISOString(), sessionId: fullMetrics.session || sys.sessionId, version: sys.version || 'v1.0', language: window.currentLang || 'pt', demoMode: !!sys.demoMode, exportMode: mode, selectedYear: sys.selectedYear, selectedPeriodo: sys.selectedPeriodo, platform: fullMetrics.platform || 'Plataforma Digital Operacional (Anonimizado)', client: { name: fullMetrics.companyName, nif: fullMetrics.nif }, pendingTimestampEvidences: getPendingEvidenceIds() },
+            metadata: { source: 'UNIFED-PROBATUM v1.0-COMMERCIAL-LITIGATION-P3.1', timestamp: new Date().toISOString(), sessionId: fullMetrics.session || sys.sessionId, version: sys.version || 'v1.0', language: window.currentLang || 'pt', demoMode: !!sys.demoMode, exportMode: mode, selectedYear: sys.selectedYear, selectedPeriodo: sys.selectedPeriodo, platform: fullMetrics.platform || 'Plataforma Digital Operacional (Anonimizado)', client: { name: fullMetrics.companyName, nif: fullMetrics.nif }, pendingTimestampEvidences: getPendingEvidenceIds() },
             integrity: { masterHash: fullMetrics.masterHash, merkleRoot: fullMetrics.merkleRoot, algorithm: 'SHA-256', protocol: 'RFC 3161', eidas2Compliant: true, pendingTimestampWarning: hasPendingTimestampEvidences() ? 'Evidências sem selagem temporal: ' + getPendingEvidenceIds().join(', ') : null },
             analysis: { totals: fullMetrics.totals, crossings: fullMetrics.crossings, twoAxis: fullMetrics.twoAxis, verdict: fullMetrics.verdict, top3Questions: fullMetrics.top3Questions, selectedQuestions: sys.analysis?.selectedQuestions || [], omissionPct: fullMetrics.omissionPct, saftGross: fullMetrics.saftGross, dac7Total: fullMetrics.dac7Total, btorLedger: fullMetrics.btorLedger, btfInvoice: fullMetrics.btfInvoice },
             monthlyData: fullMetrics.monthlyData,

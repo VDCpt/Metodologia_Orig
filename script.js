@@ -409,9 +409,12 @@ window.UNIFED_MerkleEngine = {
             const encoder = new TextEncoder();
             const data    = encoder.encode(String(str));
             const hashBuf = await crypto.subtle.digest('SHA-256', data);
+            // FASE 3.1 — FIX-HASH-CASE: normalizado para UPPERCASE em todo o lote.
+            // O motor Merkle, sha256hex() dos artefactos e masterHash usam UPPERCASE.
+            // Garante que comparações de integridade nunca falham por diferença de case.
             return Array.from(new Uint8Array(hashBuf))
                         .map(function(b) { return b.toString(16).padStart(2, '0'); })
-                        .join('');
+                        .join('').toUpperCase();
         } catch (e) {
             // crypto.subtle requer contexto seguro (HTTPS/localhost).
             // Em ambiente inseguro, interromper em vez de retornar pseudo-hash.
@@ -711,8 +714,13 @@ console.log('[SCRIPT-JS]    - UNIFED_RenderTop3 (UI Rendering)');
 
 'use strict';
 
-window._nifafAlertedHash = window._nifafAlertedHash || new Set();
-window._demoModeTimer = null;
+window._nifafAlertedHash    = window._nifafAlertedHash    || new Set();
+window._demoModeTimer       = null;
+// FASE 3.1 — FIX-GLOBALS: inicialização explícita de flags globais de estado.
+// Previne undefined vs false em verificações condicionais durante o arranque.
+window._demoAuditInProgress = window._demoAuditInProgress || false;
+window._unifedAnalysisPending = window._unifedAnalysisPending || false;
+window._merkleRootReady     = window._merkleRootReady     || false;
 
 console.log('UNIFED - PROBATUM SCRIPT v1.0-COMMERCIAL-LITIGATION · ATF · INTEGRITY SEAL · DOCX · AI ADVERSARIAL · NIFAF GUARD · NEXUS · ATIVADO');
 
@@ -3013,22 +3021,56 @@ function aplicarTraducaoDinamicaUI(lang) {
 // ATUALIZAÇÃO UNIVERSAL DE BILINGUISMO — DOM SWEEP (Tolerância Zero)
 // ============================================================================
 function updateDOMLanguage() {
-    // CORREÇÃO CRÍTICA: Varrer TODOS os elementos com data-pt e data-en
+    // FASE 3.1 — i18n FIX: preservar elementos filhos estruturais (ícones <i>, <span>, etc.)
+    // O textContent = enText destruía ícones Font Awesome em h4/h3 com filhos.
+    // Solução: se o elemento tem um filho de texto puro, actualizar só esse nó.
+    // Se tem um <span> sem classe de ícone, actualizar o <span>.
+    // Só usar textContent se o elemento não tiver filhos estruturais.
     const isEn = currentLang === 'en';
     const allElements = document.querySelectorAll('[data-pt][data-en]');
     
     allElements.forEach(function(el) {
-        const ptText = el.getAttribute('data-pt');
-        const enText = el.getAttribute('data-en');
-        
-        if (isEn && enText) {
-            el.textContent = enText;
-        } else if (!isEn && ptText) {
-            el.textContent = ptText;
+        // Ignorar se marcado para não traduzir
+        if (el.hasAttribute('data-i18n-ignore')) return;
+
+        const targetText = isEn ? el.getAttribute('data-en') : el.getAttribute('data-pt');
+        if (!targetText) return;
+
+        // Verificar se o elemento tem filhos estruturais (ícones, spans, etc.)
+        const hasStructuralChildren = el.children.length > 0;
+
+        if (!hasStructuralChildren) {
+            // Elemento simples — substituição directa segura
+            if (el.textContent !== targetText) el.textContent = targetText;
+        } else {
+            // Elemento com filhos — procurar span de texto ou nó de texto puro
+            // 1. Procurar span sem classe de ícone (fas, fa-, etc.)
+            const textSpan = Array.from(el.querySelectorAll('span')).find(
+                s => !s.className.includes('fa') && !s.className.includes('icon') && !s.className.includes('badge')
+            );
+            if (textSpan) {
+                if (textSpan.textContent !== targetText) textSpan.textContent = targetText;
+                return;
+            }
+            // 2. Procurar nó de texto puro não vazio
+            const textNode = Array.from(el.childNodes).find(
+                n => n.nodeType === Node.TEXT_NODE && n.textContent.trim().length > 0
+            );
+            if (textNode) {
+                textNode.textContent = ' ' + targetText;
+                return;
+            }
+            // 3. Fallback: usar innerHTML preservando filhos (substituir apenas texto após ícone)
+            // Reconstruir innerHTML mantendo o primeiro filho <i> e substituindo o texto a seguir
+            const iconChild = el.querySelector('i.fas, i.far, i.fab, i.fa');
+            if (iconChild) {
+                // Preservar o ícone e substituir o texto adjacente
+                el.innerHTML = iconChild.outerHTML + ' ' + targetText;
+            }
         }
     });
     
-    console.log('[UNIFED-LANG] updateDOMLanguage: ' + allElements.length + ' elementos atualizados para ' + (isEn ? 'EN' : 'PT'));
+    console.log('[UNIFED-LANG] updateDOMLanguage: ' + allElements.length + ' elementos actualizados para ' + (isEn ? 'EN' : 'PT') + ' (preservação de ícones activa)');
 }
 
 function switchLanguage() {
@@ -3400,6 +3442,35 @@ function switchLanguage() {
         updateModulesUI();
     }
     
+    // ── FASE 3.1 — i18n FIX: elementos com cobertura incompleta ──────────────
+    // Footer copyright
+    const _footerCopy = document.getElementById('footerCopyright');
+    if (_footerCopy) {
+        const _fcAttr = currentLang === 'en' ? _footerCopy.getAttribute('data-en') : _footerCopy.getAttribute('data-pt');
+        if (_fcAttr) _footerCopy.textContent = _fcAttr;
+    }
+
+    // masterHashValue placeholder quando ainda não há hash
+    const _mhv = document.getElementById('masterHashValue');
+    if (_mhv) {
+        const _mhvText = _mhv.textContent.trim();
+        const _ptPh = _mhv.getAttribute('data-pt-placeholder') || 'A aguardar dados...';
+        const _enPh = _mhv.getAttribute('data-en-placeholder') || 'Awaiting data...';
+        // Só traduz se ainda for o placeholder (não um hash real de 64 chars)
+        if (_mhvText.length < 64) {
+            _mhv.textContent = (currentLang === 'en') ? _enPh : _ptPh;
+        }
+    }
+
+    // version-footer badge
+    const _versionFooter = document.querySelector('.version-footer');
+    if (_versionFooter) {
+        _versionFooter.textContent = (currentLang === 'en')
+            ? 'UNIFED-PROBATUM © 2026 | EM | COURT READY | NEXUS | BIG DATA ACCUMULATOR'
+            : 'UNIFED-PROBATUM © 2026 | EM | COURT READY | NEXUS | BIG DATA ACCUMULATOR';
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     startClockAndDate();
     updateDynamicContent();
     translateDataLangElements();
@@ -4370,23 +4441,28 @@ function generateQRCode() {
     // <-- RETIFICAÇÃO 4: Alinhamento de sintaxe com o PDF (gerarQRCodeDataURL)
     const qrData = `SESSAO:${sessionId} MASTER HASH SHA-256:${masterHash}`;
 
-    // Activar lock para permitir que a vacina HTML deixe passar esta escrita legítima
+    // FASE 3.1 — FIX-QRLOCK: try/finally garante libertação do lock mesmo em caso de erro.
+    // Race condition anterior: se QRCode() lançasse excepção, _qrCodeLock ficava true
+    // permanentemente, bloqueando todas as escritas legítimas de innerHTML subsequentes.
     window._qrCodeLock = true;
-    container.innerHTML = '';
-    if (typeof QRCode !== 'undefined') {
-        new QRCode(container, {
-            text: qrData,
-            width: 128,
-            height: 128,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.Q
-        });
-        console.log('[QR] ✅ QR Code gerado. Hash:', masterHash.substring(0, 16) + '...' + masterHash.substring(48));
-    } else {
-        console.error('[QR] ❌ QRCode.js não disponível — QR Code não renderizado.');
+    try {
+        container.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(container, {
+                text: qrData,
+                width: 128,
+                height: 128,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.Q
+            });
+            console.log('[QR] ✅ QR Code gerado. Hash:', masterHash.substring(0, 16) + '...' + masterHash.substring(48));
+        } else {
+            console.error('[QR] ❌ QRCode.js não disponível — QR Code não renderizado.');
+        }
+    } finally {
+        window._qrCodeLock = false; // Sempre libertado, mesmo em caso de excepção
     }
-    window._qrCodeLock = false;
     container.setAttribute('data-tooltip', 'Clique para verificar a cadeia de custódia completa');
 }
 
@@ -5538,6 +5614,31 @@ function activateDemoMode() {
                     !window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.isSealed) {
                     await window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.seal();
                     console.log('[FALHA7-R24] ✅ Cadeia de custódia selada após análise.');
+
+                    // ── FASE 3.1 — FIX-HASH-SYNC (Fix 5): sincronização completa após seal() ──
+                    // Após seal(), o chainOfCustody.masterHash é o valor definitivo.
+                    // Propagar imediatamente para: UNIFEDSystem, UNIFED_ACTIVE_EXPORT_PAYLOAD,
+                    // e regenerar QR Code e _syncPureDashboard para garantir coerência total.
+                    const _sealedHash = window.UNIFED_FORENSIC_SYSTEM.chainOfCustody.masterHash;
+                    if (_sealedHash && typeof _sealedHash === 'string' && _sealedHash.length === 64) {
+                        // Propagar para UNIFEDSystem
+                        window.UNIFEDSystem.masterHash = _sealedHash;
+                        // Propagar para payload de exportação activo
+                        if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) {
+                            window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = _sealedHash;
+                        }
+                        // Forçar regeneração do QR Code com o hash definitivo
+                        if (typeof generateQRCode === 'function') {
+                            generateQRCode();
+                            console.log('[FALHA7-R24] ✅ QR Code regenerado com hash selado: ' + _sealedHash.substring(0,16) + '...');
+                        }
+                        // Forçar _syncPureDashboard para actualizar todos os elementos do DOM
+                        if (typeof window._syncPureDashboard === 'function') {
+                            window._syncPureDashboard(window.UNIFEDSystem);
+                        }
+                        console.log('[FALHA7-R24] ✅ Hash definitivo propagado após seal(): ' + _sealedHash.substring(0,16) + '...');
+                    }
+                    // ─────────────────────────────────────────────────────────────────────
                 }
             } catch (_sealErr) {
                 if (window.UNIFED_FORENSIC_LOG) window.UNIFED_FORENSIC_LOG.push({ ts: Date.now(), lvl: 'WARN', msg: '[FALHA7] Seal falhou: ' + _sealErr.message });
@@ -9355,6 +9456,15 @@ window._syncPureDashboard = (function() {
                     el.textContent = masterHash;
                 }
             });
+            // FASE 3.1 — FIX-HASH-SYNC (Fix 3): propagar masterHash para UNIFED_ACTIVE_EXPORT_PAYLOAD.
+            // Garante que o payload activo de exportação reflecte sempre o hash final
+            // do dashboard, eliminando a divergência entre o footer do dashboard e
+            // os documentos exportados (problema identificado no documento 9).
+            if (masterHash && masterHash.length === 64) {
+                if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) {
+                    window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = masterHash;
+                }
+            }
             if(typeof window.generateQRCode === 'function') window.generateQRCode();
             console.log(`[SYNC] ${updated} elementos actualizados. Master hash: ${masterHash.substring(0,16)}...`);
             return updated;
