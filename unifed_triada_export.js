@@ -580,7 +580,7 @@
         if (chainHash) {
             // Propagar para UNIFEDSystem para manter consistência
             if (window.UNIFEDSystem) window.UNIFEDSystem.masterHash = chainHash;
-            if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = chainHash;
+            // FASE 3.1 — FIX-FROZEN: não escrever em UNIFED_ACTIVE_EXPORT_PAYLOAD (frozen). Hash propagado via UNIFEDSystem.masterHash setter.
             triadaLog('info', '✅ Master Hash obtido de chainOfCustody (fonte primária).');
             return chainHash;
         }
@@ -2666,17 +2666,22 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
     window._exportPacoteAnalista = async function (fullPayload) {
         triadaLog('info', '🚀 _exportPacoteAnalista — iniciando compilação do arquivo .ZIP para o Analista');
         try {
-            // ── FASE 3.1 — FIX-HASH-SYNC: forçar sincronização do masterHash ────────
-            // Garante que o masterHash final (após chainOfCustody.seal()) é propagado
-            // antes de qualquer geração de PDF ou JSON, eliminando divergências entre
-            // o dashboard e os documentos exportados.
-            const _freshHash = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash;
+            // ── FASE 3.1 — FIX-HASH-SYNC v2: sincronização segura (objecto payload é frozen) ──
+            // CAUSA RAIZ DO ERRO: getVerifiedPayload() retorna Object.freeze({...})
+            // Escrever .masterHash = x num objecto frozen lança TypeError em strict mode.
+            // SOLUÇÃO: propagar o hash para window.UNIFEDSystem.masterHash VIA SETTER
+            // (WATCH-4) ANTES de chamar getVerifiedPayload() — o payload frozen nasce
+            // já com o hash correcto lido de window.UNIFEDSystem.masterHash.
+            // Nunca escrever directamente em UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash.
+            const _freshHash = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash
+                             || safeGenerateMasterBatchHash();
             if (_freshHash && typeof _freshHash === 'string' && _freshHash.length === 64) {
+                // Escrever via setter reactivo WATCH-4 (não frozen — configurable:true)
                 window.UNIFEDSystem.masterHash = _freshHash;
-                if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = _freshHash;
-                triadaLog('info', '🔗 masterHash sincronizado de chainOfCustody antes da exportação: ' + _freshHash.substring(0, 16) + '...');
+                triadaLog('info', '🔗 [ANALISTA] masterHash pré-payload: ' + _freshHash.substring(0, 16) + '...');
             }
-            // ────────────────────────────────────────────────────────────────────────
+            // UNIFED_ACTIVE_EXPORT_PAYLOAD é atribuído APÓS esta linha — já com hash correcto
+            // ──────────────────────────────────────────────────────────────────────────────
             const sessionId = window.UNIFEDSystem?.analysis?.sessionId || window.UNIFEDSystem?.sessionId || "DEMO";
             // Passa o payload integral (se fornecido) para o gerador do PDF
             const parecerBlob = await _gerarBlobParecerAnalista(fullPayload);
@@ -2734,16 +2739,15 @@ Fundamentação Legal: Art. 327.º CPP (Contraditório) · Art. 125.º CPP (Admi
                 : null;
             window.UNIFED_ACTIVE_EXPORT_PAYLOAD = _unifiedPayload;
 
-            // ── FASE 3.1 — FIX-HASH-SYNC: sincronizar masterHash de chainOfCustody ──
-            // Mesma lógica aplicada a _exportPacoteAnalista — garante que o PDF do
-            // advogado usa sempre o hash definitivo após chainOfCustody.seal().
-            const _freshHashAdv = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash;
+            // ── FASE 3.1 — FIX-HASH-SYNC v2: sincronização segura — sem escrita em frozen ──
+            // getVerifiedPayload() retorna Object.freeze() — não pode receber .masterHash=x.
+            // Propagar hash via setter WATCH-4 de UNIFEDSystem.masterHash ANTES do payload
+            // ser criado por getVerifiedPayload(), que lê de window.UNIFEDSystem.masterHash.
+            const _freshHashAdv = window.UNIFED_FORENSIC_SYSTEM?.chainOfCustody?.masterHash
+                                || safeGenerateMasterBatchHash();
             if (_freshHashAdv && typeof _freshHashAdv === 'string' && _freshHashAdv.length === 64) {
-                window.UNIFEDSystem.masterHash = _freshHashAdv;
-                if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) {
-                    window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = _freshHashAdv;
-                }
-                triadaLog('info', '🔗 [ADV] masterHash sincronizado de chainOfCustody: ' + _freshHashAdv.substring(0, 16) + '...');
+                window.UNIFEDSystem.masterHash = _freshHashAdv; // setter WATCH-4 — não frozen
+                triadaLog('info', '🔗 [ADV] masterHash pré-payload: ' + _freshHashAdv.substring(0, 16) + '...');
             }
             // ─────────────────────────────────────────────────────────────────────
 

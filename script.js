@@ -5623,10 +5623,9 @@ function activateDemoMode() {
                     if (_sealedHash && typeof _sealedHash === 'string' && _sealedHash.length === 64) {
                         // Propagar para UNIFEDSystem
                         window.UNIFEDSystem.masterHash = _sealedHash;
-                        // Propagar para payload de exportação activo
-                        if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) {
-                            window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = _sealedHash;
-                        }
+                        // FASE 3.1 — FIX-FROZEN: UNIFED_ACTIVE_EXPORT_PAYLOAD é frozen.
+                        // Não escrever directamente. O hash está em UNIFEDSystem.masterHash
+                        // (setter acima) — o próximo getVerifiedPayload() lê este valor.
                         // Forçar regeneração do QR Code com o hash definitivo
                         if (typeof generateQRCode === 'function') {
                             generateQRCode();
@@ -9456,13 +9455,16 @@ window._syncPureDashboard = (function() {
                     el.textContent = masterHash;
                 }
             });
-            // FASE 3.1 — FIX-HASH-SYNC (Fix 3): propagar masterHash para UNIFED_ACTIVE_EXPORT_PAYLOAD.
-            // Garante que o payload activo de exportação reflecte sempre o hash final
-            // do dashboard, eliminando a divergência entre o footer do dashboard e
-            // os documentos exportados (problema identificado no documento 9).
+            // FASE 3.1 — FIX-HASH-SYNC (Fix 3 v2): UNIFED_ACTIVE_EXPORT_PAYLOAD é frozen
+            // (retornado por getVerifiedPayload com Object.freeze). Não escrever directamente.
+            // O hash já foi propagado para window.UNIFEDSystem.masterHash via setter WATCH-4,
+            // e o próximo payload será criado com o valor correcto ao chamar getVerifiedPayload().
+            // A consistência é garantida pela ordem: seal() → setter → getVerifiedPayload().
             if (masterHash && masterHash.length === 64) {
-                if (window.UNIFED_ACTIVE_EXPORT_PAYLOAD) {
-                    window.UNIFED_ACTIVE_EXPORT_PAYLOAD.masterHash = masterHash;
+                // Apenas garantir que UNIFEDSystem.masterHash está actualizado (via setter)
+                // O setter WATCH-4 é configurable:true — não frozen
+                if (window.UNIFEDSystem && window.UNIFEDSystem.masterHash !== masterHash) {
+                    window.UNIFEDSystem.masterHash = masterHash;
                 }
             }
             if(typeof window.generateQRCode === 'function') window.generateQRCode();
