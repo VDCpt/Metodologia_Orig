@@ -4,7 +4,7 @@
  * ============================================================================
  * Base de Questões para Admissibilidade Técnico-Jurídica (Nível Tribunal)
  * Estruturadas em 5 Eixos: Cadeia Custódia, DAC7 vs SAF-T, Nexus-Zero, 
- * Algoritmo e Responsabilidade Normas de Conformidade Fiscal
+ * Algoritmo e Responsabilidade Tributária (RGIT)
  * 
  * RETIFICAÇÃO CIRÚRGICA: Inserção de Modelo Estatístico para Cálculo de Dano
  * ============================================================================
@@ -176,7 +176,7 @@ window.UNIFED_QUESTIONNAIRE = {
             axis: 'B',
             title: 'Triangulação DAC7 vs SAF-T',
             text: 'Os números de série de fatura foram validados para continuidade e ausência de lacunas (ex: fatura 001, 002, 004 — falta 003)?',
-            norma: 'Art. 103º, n.º 2 Normas de Conformidade Fiscal (Sequência de Faturação)',
+            norma: 'Art. 103.º, n.º 2 RGIT (Fraude Fiscal — Sequência de Faturação)',
             implicacao: 'Lacunas na sequência indicam omissões deliberadas.',
             defesa: 'Listar lacunas detectadas, períodos afetados e quantificação de faturas omitidas.'
         },
@@ -397,21 +397,21 @@ window.UNIFED_QUESTIONNAIRE = {
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // EIXO E: RESPONSABILIDADE Normas de Conformidade Fiscal (Q41-Q50)
+        // EIXO E: RESPONSABILIDADE TRIBUTÁRIA RGIT (Q41-Q50)
         // ────────────────────────────────────────────────────────────────────
         {
             id: 'E001',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
-            text: 'O operador cumpriu a obrigação de declaração ao Normas de Conformidade Fiscal (Registo Geral de Imposto sobre o Rendimento) dentro do prazo legal?',
-            norma: 'Art. 114º Normas de Conformidade Fiscal (Prazos de Entrega)',
+            title: 'Responsabilidade Tributária (RGIT)',
+            text: 'O operador cumpriu a obrigação de declaração ao RGIT (Regime Geral das Infracções Tributárias) dentro do prazo legal?',
+            norma: 'Art. 114.º RGIT (Prazos de Entrega e Incumprimento Declarativo)',
             implicacao: 'Falta de declaração dentro do prazo é infração autónoma.',
             defesa: 'Verificar data de entrega oficial da declaração vs. data limite (31 Maio do ano seguinte).'
         },
         {
             id: 'E002',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'A omissão de rendimentos detectada é intencional (dolosa) ou resultado de erro administrativo (culpa)?',
             norma: 'Art. 103.º RGIT (Fraude Fiscal — Graus de Culpabilidade)',
             implicacao: 'Intenção agrava significativamente as sanções (até 150% vs. 15% por engano).',
@@ -420,7 +420,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E003',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'O operador realizou diligência devida para validar as retenções da plataforma (ex: solicitando esclarecimentos)?',
             norma: 'Art. 29.º n.º1 al. b) CIVA (Dever de Validação de Faturação)',
             implicacao: 'Negligência do operador em validar não elimina responsabilidade da plataforma.',
@@ -429,7 +429,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E004',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'A plataforma agiu de boa fé ao reter valores (ex: cumprindo legislação local) ou com intenção deliberada de sonegar?',
             norma: 'Art. 36º CIVA (Princípio da Boa Fé)',
             implicacao: 'Boa fé reduz culpabilidade; intenção deliberada agrava sanções.',
@@ -438,7 +438,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E005',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'O imposto evadido durante a omissão foi posteriormente regularizado (ex: após descoberta) ou mantém-se em aberto?',
             norma: 'Art. 22.º RGIT (Regularização Espontânea — Atenuação de Sanções)',
             implicacao: 'Regularização espontânea reduz sanções; falta de regularização agrava.',
@@ -447,7 +447,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E006',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'A plataforma era obrigada a emitir fatura (ex: pelo montante da retenção) ou estava isenta por legislação local?',
             norma: 'Art. 29.º n.º1 al. b) CIVA (Obrigação de Faturação)',
             implicacao: 'Isenção legal elimina responsabilidade; obrigação não cumprida constitui infração fiscal — Art. 103.º RGIT.',
@@ -456,8 +456,8 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E007',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
-            text: 'A retenção de valores pela plataforma ocorreu em território português (sujeita a Normas de Conformidade Fiscal) ou em país estrangeiro?',
+            title: 'Responsabilidade Tributária (RGIT)',
+            text: 'A retenção de valores pela plataforma ocorreu em território português (sujeita ao RGIT) ou em país estrangeiro?',
             norma: 'Art. 2º, n.º 1, al. i) CIVA (Territorialidade)',
             implicacao: 'Se em estrangeiro, a responsabilidade pode ser dividida (Art. 32.º RGPD / D.L. n.º 28/2019).',
             defesa: 'Domicílio fiscal da plataforma, local de residência do operador, ponto de execução.'
@@ -465,7 +465,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E008',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'O operador tinha direito de dedução de IVA sobre as comissões realmente remuneradas ou sobre as comissões declaradas em SAF-T?',
             norma: 'Art. 19.º a 25.º CIVA (Direito à Dedução de IVA)',
             implicacao: 'Dedução excessiva baseada em valores inflacionados também constitui infração.',
@@ -474,7 +474,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E009',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'A plataforma beneficiou-se de regime fiscal especial (ex: isenção startup) que poderia justificar a retenção sem declaração?',
             norma: 'Art. 9.º e Art. 53.º CIVA (Isenções e Regimes Especiais)',
             implicacao: 'Regime especial pode eliminar responsabilidade, mas deve ser legalmente comprovado.',
@@ -483,7 +483,7 @@ window.UNIFED_QUESTIONNAIRE = {
         {
             id: 'E010',
             axis: 'E',
-            title: 'Responsabilidade Normas de Conformidade Fiscal',
+            title: 'Responsabilidade Tributária (RGIT)',
             text: 'Qual é a quota de responsabilidade entre operador (submissão de SAF-T) e plataforma (retenção e não-declaração)?',
             norma: 'Art. 125º CPP (Análise de Causalidade)',
             implicacao: 'Tribunal pode distribuir responsabilidade de forma proporcional.',
@@ -532,7 +532,7 @@ window.UNIFED_QUESTIONNAIRE = {
         // --- REGRA 2: Gap de Receita (SAF-T vs DAC7) ---
         if (metrics.revenueGap > 0 && metrics.saftGross && (metrics.revenueGap / metrics.saftGross) > 0.15) {
             weights.B += 40;  // Eixo B prioritário
-            weights.E += 20;  // Responsabilidade Normas de Conformidade Fiscal
+            weights.E += 20;  // Responsabilidade Tributária RGIT
         } else if (metrics.revenueGap > 0) {
             weights.B += 20;
         }

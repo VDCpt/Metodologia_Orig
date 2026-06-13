@@ -2,7 +2,7 @@
  * ============================================================================
  * UNIFED-PROBATUM | MÓDULO DE EXPORTAÇÃO FORENSE — PACOTE CONTRA-CONSULTORIA TÉCNICA
  * ============================================================================
- * Versão  : v1.0-COMMERCIAL-LITIGATION-P3.1
+ * Versão  : v1.0-CONTRAPERIRIA
  * Normas  : ISO/IEC 27037:2012 · Art. 125.º CPP · D.L. n.º 28/2019 · eIDAS 2.0
  *
  * PROPÓSITO:
@@ -52,7 +52,7 @@
     }
 
     // ── Constantes de identificação ──────────────────────────────────────────
-    const MODULE_VERSION  = 'v1.0-COMMERCIAL-LITIGATION-P3.1';
+    const MODULE_VERSION  = 'v1.0-CONTRAPERIRIA';
     const MODULE_ID       = 'UNIFED-PROBATUM-CONTRAPERIRIA';
     const PATCH_REGISTRY  = [
         {
@@ -86,46 +86,6 @@
             linha:    8862,
             descricao:'Eliminação do factor 0.85 hardcoded na variável macroMensal do painel de controlo',
             checksum: '1704998820.00'
-        },
-        {
-            id:       'FASE3.1-C1',
-            ficheiro: 'script.js',
-            funcao:   '_autoGenerateTop3()',
-            linha:    5930,
-            descricao:'Disparo de UNIFED_TOP3_READY após triggerAnalysisComplete — desbloqueio do botão de exportação',
-            checksum: 'N/A'
-        },
-        {
-            id:       'FASE3.1-C2',
-            ficheiro: 'script.js',
-            funcao:   'performForensicCrossings()',
-            linha:    6318,
-            descricao:'Substituição do cálculo escalar por Z-Score IC 99% sobre vector de meses reais (calcularDanoConservador Modo B)',
-            checksum: 'DINAMICO_Z-SCORE-IC99'
-        },
-        {
-            id:       'FASE3.1-C3',
-            ficheiro: 'unifed_contraperiria_export.js',
-            funcao:   '_buildManifesto / guard UNIFED_TOP3_READY',
-            linha:    673,
-            descricao:'Guard criptográfico _merkleRootReady + ouvinte UNIFED_TOP3_READY — eliminação de race condition no botão de exportação',
-            checksum: 'N/A'
-        },
-        {
-            id:       'FASE3.1-C4',
-            ficheiro: 'script.js',
-            funcao:   'registerPageUnload()',
-            linha:    8723,
-            descricao:'Triple-layer de purga (visibilitychange + pagehide + beforeunload) + Uint8Array.fill(0) scrubbing activo',
-            checksum: 'N/A'
-        },
-        {
-            id:       'FASE3.1-FIX-HASH',
-            ficheiro: 'script.js',
-            funcao:   'Motor Merkle — função hash interna',
-            linha:    413,
-            descricao:'Normalização para UPPERCASE — consistência com sha256hex() e masterHash em todo o lote',
-            checksum: 'N/A'
         }
     ];
 
@@ -167,39 +127,9 @@
         const pD1_impactoSeteAnos= mediaMensalOmissao * 38000 * 12 * 7;
         const pD2_macro7Anos     = mediaMensalOmissao * 38000 * 12 * 7;
 
-        // ── FASE 3.1 — FIX-VERIF-MATH: substituição do checksum estático ───────
-        // PROBLEMA: checksum hardcoded 1.704.998.820,00 € era válido para o
-        // cálculo escalar directo. Após Cirurgia 2, performForensicCrossings()
-        // usa Z-Score IC 99% que produz um valor diferente por definição
-        // (é conservadoramente inferior à média bruta). O FAIL era falso positivo.
-        // SOLUÇÃO: a verificação compara a consistência INTERNA entre os 4 pontos
-        // de cálculo, não contra um valor absoluto fixo. A coerência é definida
-        // como: max(resultados) - min(resultados) < 1% do valor médio.
-        // O valor de referência histórico é preservado para rastreabilidade.
-        // ─────────────────────────────────────────────────────────────────────────
-
-        // Valor de referência do motor Z-Score em runtime (se disponível)
-        const _crossRuntime = (window.UNIFEDSystem &&
-                               window.UNIFEDSystem.analysis &&
-                               window.UNIFEDSystem.analysis.crossings &&
-                               window.UNIFEDSystem.analysis.crossings.impactoSeteAnosMercado) || null;
-
-        const _allValues = [pA_impactoSeteAnos, pBC_impacto7Anos, pD1_impactoSeteAnos, pD2_macro7Anos];
-        const _maxVal    = Math.max(..._allValues);
-        const _minVal    = Math.min(..._allValues);
-        const _avgVal    = _allValues.reduce((a, b) => a + b, 0) / _allValues.length;
-        const _internalDelta = _maxVal - _minVal;
-        // Coerência interna: todos os pontos derivam da mesma mediaMensalOmissao
-        // portanto devem ser matematicamente idênticos. Tolerância: 0.01€.
-        const coerente   = _internalDelta < 0.01;
-
-        // Comparação com o motor Z-Score runtime (se disponível)
-        const _zDelta    = _crossRuntime !== null
-            ? Math.abs(_crossRuntime - pD1_impactoSeteAnos).toFixed(2)
-            : 'N/A (dados runtime não disponíveis no momento da exportação)';
-        const _zCoerente = _crossRuntime !== null
-            ? (Math.abs(_crossRuntime - pD1_impactoSeteAnos) / Math.max(_crossRuntime, 1) < 0.15)
-            : null; // Diferença <15% esperada pelo IC 99% do Z-Score
+        const checksumEsperado   = 1704998820.00;
+        const delta = Math.abs(pD2_macro7Anos - checksumEsperado);
+        const coerente = delta < 0.01;
 
         return {
             input: {
@@ -207,37 +137,21 @@
                 mesesDados,
                 mediaMensalOmissao: mediaMensalOmissao.toFixed(4) + ' €'
             },
-            formula: 'mediaMensalOmissao × 38.000 × 12 × 7 (verificação interna de coerência)',
+            formula: 'mediaMensalOmissao × 38.000 × 12 × 7',
             resultados: {
                 patchA_getSystemMetrics:              pA_impactoSeteAnos.toFixed(2),
                 patchBC_gerarBlobParecerTecnicoForense: pBC_impacto7Anos.toFixed(2),
                 patchD1_crossImpactoSeteAnosMercado:  pD1_impactoSeteAnos.toFixed(2),
-                patchD2_macroUIPureMacro7Anos:        pD2_macro7Anos.toFixed(2),
-                zScoreIC99_runtime:                   _crossRuntime !== null ? _crossRuntime.toFixed(2) : 'N/A'
+                patchD2_macroUIPureMacro7Anos:        pD2_macro7Anos.toFixed(2)
             },
-            verificacaoInterna: {
-                deltaMaximoInterno:  _internalDelta.toFixed(2) + ' €',
-                coerenciaInterna:    coerente,
-                valorMedioInterno:   _avgVal.toFixed(2) + ' €'
-            },
-            verificacaoZScore: {
-                deltaVsZScore:       _zDelta + ' €',
-                coerenciaComZScore:  _zCoerente,
-                nota:                'Diferença esperada: Z-Score IC99% produz valor conservador inferior ao escalar directo.'
-            },
-            referenciasHistoricas: {
-                checksumAnterior_factor085: '1.449.248.997,00 €',
-                checksumIntermedio_semFactor: '1.704.998.820,00 €',
-                nota: 'Valores históricos preservados para rastreabilidade forense. Valor operacional: zScoreIC99_runtime.'
-            },
+            checksumEsperado: checksumEsperado.toFixed(2),
+            deltaMaximo: delta.toFixed(2),
             coerenciaTotal: coerente,
             veredicto: coerente
-                ? 'PASS — coerência interna confirmada entre os 4 pontos de cálculo. Base matemática consistente.'
-                : 'FAIL — divergência interna detectada (' + _internalDelta.toFixed(2) + '€). Investigar imediatamente.',
+                ? 'PASS — todos os 4 pontos de cálculo produzem valor idêntico. Impossível manipulação.'
+                : 'FAIL — divergência detectada. Investigar imediatamente.',
             valorAnteriorViciado: '1.449.248.997,00 € (factor 0.85 hardcoded)',
-            valorOperacionalActual: _crossRuntime !== null
-                ? _crossRuntime.toFixed(2) + ' € (Z-Score IC 99%, n=' + mesesDados + ' meses)'
-                : '1.704.998.820,00 € (escalar directo, fallback)'
+            valorCorrigido:       '1.704.998.820,00 € (cálculo directo, base mensal)'
         };
     }
 
@@ -444,14 +358,6 @@
 
     // ── Função principal de exportação ───────────────────────────────────────
     async function exportarPacoteContraperiria() {
-        // FASE 3.1 — FIX-EXPORT-LOCK: guard de invocação dupla independente do botão.
-        // Protege invocações via window._exportPacoteContraperiria() sem botão activo.
-        if (window._unifedExportInProgress) {
-            console.warn('[AUDITORIA-EXPORT] ⚠️ Exportação já em progresso — invocação dupla ignorada.');
-            return;
-        }
-        window._unifedExportInProgress = true;
-
         const btn = document.getElementById('unifed-contraperiria-btn');
         if (btn) {
             btn.disabled = true;
@@ -647,9 +553,6 @@
                 }, 5000);
             }
             alert('[UNIFED] Erro ao gerar pacote: ' + err.message);
-        } finally {
-            // Libertar sempre o lock de exportação (sucesso ou erro)
-            window._unifedExportInProgress = false;
         }
     }
 

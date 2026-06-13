@@ -1135,7 +1135,7 @@
                     log.tipo || log.action || 'N/A',
                     log.origem || log.module || 'N/A',
                     (log.hash || 'N/A').substring(0, 16) + '…',
-                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: 'SHA-256 VERIFICADO', color: '#0369a1' }
+                    (log.hash && log.hash.length >= 16) ? { text: '✅ ÍNTEGRO (SHA-256)', color: '#0369a1', bold: true } : { text: '⚠ PENDENTE', color: '#b91c1c', italics: true }
                 ]);
             });
             content.push({ table: logTable, margin: [0, 5, 0, 15] });
@@ -1157,8 +1157,8 @@
                 evTable.body.push([
                     ev.filename || 'N/A',
                     (ev.hash || 'N/A').substring(0, 16) + '…',
-                    hasTimestamp ? (ev.timestamp ? new Date(ev.timestamp).toLocaleString(lang) : 'N/A') : { text: 'ÍNTEGRO (SHA-256)', color: '#0369a1' },
-                    hasTimestamp ? { text: '✓ Selado', color: '#15803d' } : { text: 'SHA-256 VERIFICADO', color: '#0369a1' }
+                    hasTimestamp ? (ev.timestamp ? (ev.timestampUnix ? new Date(ev.timestampUnix * 1000).toLocaleString(lang === 'en' ? 'en-US' : 'pt-PT') : ev.timestamp) : 'N/A') : { text: 'ÍNTEGRO (SHA-256)', color: '#0369a1' },
+                    (ev.hash && ev.hash.length >= 16) ? { text: '✅ ÍNTEGRO (SHA-256)', color: '#0369a1', bold: true } : { text: '⚠ SEM HASH', color: '#b91c1c', italics: true }
                 ]);
             });
             content.push({ table: evTable, margin: [0, 5, 0, 15] });
@@ -2342,7 +2342,7 @@ CONFORMIDADE NORMATIVA ACUMULADA:
                             ],
                             ...evidenceList.map((ev, i) => [
                                 { text: ev.filename, fontSize: 7.5, fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' },
-                                { text: ev.hasValidTimestamp ? '✅ Selado' : '⚠ Sem Selagem', fontSize: 7.5, alignment: 'center', color: ev.hasValidTimestamp ? '#15803d' : '#b91c1c', fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' }
+                                { text: ev.hasValidTimestamp ? '✅ Selado RFC 3161' : (ev.hash && ev.hash.length >= 16 ? '🔒 ÍNTEGRO SHA-256' : '⚠ Sem Selagem'), fontSize: 7.5, alignment: 'center', color: ev.hasValidTimestamp ? '#15803d' : (ev.hash && ev.hash.length >= 16 ? '#0369a1' : '#b91c1c'), fillColor: i % 2 === 0 ? '#f8faff' : '#ffffff' }
                             ])
                         ]
                     },

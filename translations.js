@@ -61,13 +61,15 @@ window.UNIFED_TRANSLATIONS.DICTIONARY = {
     'top3_axis_label': { 'pt': 'Eixo', 'en': 'Axis' },
 
     // ════════════════════════════════════════════════════════════════════════
-    // EIXOS DO QUESTIONÁRIO (alinhados com Normas de Conformidade Fiscal e CPP)
+    // EIXOS DO QUESTIONÁRIO (alinhados com RGIT, DL 28/2019 e CPP)
     // ════════════════════════════════════════════════════════════════════════
     'questionnaire_axis_a': { 'pt': 'Eixo A: Cadeia de Custódia (art. 327.º CPP e ISO 27037)', 'en': 'Axis A: Chain of Custody (CPP art. 327 & ISO 27037)' },
     'questionnaire_axis_b': { 'pt': 'Eixo B: Triangulação DAC7 vs SAF-T (DL 28/2019)', 'en': 'Axis B: DAC7 vs SAF-T Triangulation (DL 28/2019)' },
     'questionnaire_axis_c': { 'pt': 'Eixo C: Nexus‑Zero / Apropriação Indevida (art. 125.º CPP)', 'en': 'Axis C: Nexus‑Zero / Undue Appropriation (CPP art. 125)' },
-    'questionnaire_axis_d': { 'pt': 'Eixo D: Algoritmo & Falibilidade (Normas de Conformidade Fiscal)', 'en': 'Axis D: Algorithm & Fallibility (Normas de Conformidade Fiscal)' },
-    'questionnaire_axis_e': { 'pt': 'Eixo E: Responsabilidade Tributária (Normas de Conformidade Fiscal/LGT)', 'en': 'Axis E: Tax Liability (Normas de Conformidade Fiscal/LGT)' },
+    'questionnaire_axis_d': { 'pt': 'Eixo D: Algoritmo & Falibilidade (art. 103.º e 104.º RGIT)', 'en': 'Axis D: Algorithm & Fallibility (RGIT art. 103 & 104)' },
+    'questionnaire_axis_e': { 'pt': 'Eixo E: Responsabilidade Tributária (art. 103.º e 114.º RGIT / LGT)', 'en': 'Axis E: Tax Liability (RGIT art. 103 & 114 / LGT)' },
+    // RET-TRANS-RGIT: chave de conformidade legal para PDFs (Fraude Fiscal e Qualificada)
+    'pdfLegalRGIT': { 'pt': 'Art. 103.º e 104.º do RGIT — Fraude Fiscal e Fraude Fiscal Qualificada', 'en': 'RGIT Art. 103 & 104 — Tax Fraud and Qualified Tax Fraud' },
 
     // ════════════════════════════════════════════════════════════════════════
     // MERKLE TREE & eIDAS

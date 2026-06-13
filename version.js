@@ -8,7 +8,7 @@
  * ============================================================================
  */
 window.UNIFED_VERSION = Object.freeze({
-    full:    'v1.0-COMMERCIAL-LITIGATION-P3.1',
+    full:    'v1.0-COMMERCIAL-LITIGATION-P3.2',
     major:   1,
     minor:   0,
     patch:   3,
@@ -19,7 +19,8 @@ window.UNIFED_VERSION = Object.freeze({
         { patch: 'P13',   build: '2025-03-15', desc: 'Versão inicial COMMERCIAL-LITIGATION' },
         { patch: 'P3.1a', build: '2026-06-12', desc: 'Substituição léxica global (164 ocorrências); guard Merkle; Z-Score IC99%; scrubbing V8; TSA config' },
         { patch: 'P3.1b', build: '2026-06-13', desc: 'Cirurgias 1-5: TOP3_READY; Z-Score integrado; operatorToken; rota TSA 502/504; alerta forense' },
-        { patch: 'P3.1c', build: '2026-06-13', desc: 'Hash UPPERCASE normalizado; checksum dinâmico; PATCH_REGISTRY actualizado; sintaxe JS validada' }
+        { patch: 'P3.1c', build: '2026-06-13', desc: 'Hash UPPERCASE normalizado; checksum dinâmico; PATCH_REGISTRY actualizado; sintaxe JS validada' },
+        { patch: 'P3.2',  build: '2026-06-13', desc: 'Retificações cirúrgicas DEMO: RGIT léxico (nexus/enrichment/script/translations/questionnaire); IVA-6% label; checksumEsperado fallback; Invalid Date (timestampUnix); selado lógica unificada (hash≥16 chars); sessionId dinâmico em activateDemoMode; masterHash→activeForensicSession sync (2 pontos); macro prioridade cross.impacto*' }
     ])
 });
 console.log('[UNIFED-VERSION] ✅ Version manifest carregado:', window.UNIFED_VERSION.full);

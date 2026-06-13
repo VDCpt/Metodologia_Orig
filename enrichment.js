@@ -635,7 +635,7 @@ function _exportDocxMimeNativo(_package, _lang, docxLanguage, UNIFEDSys, analysi
 <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Artigo 4.º</w:t></w:r>
 <w:r><w:t> A Ré actua como detentora do Monopólio da Emissão Documental (Art. 36.º, n.º 11 CIVA), encontrando-se a Autora em situação de indefesa técnica (Art. 344.º, n.º 2 CC — inversão do ónus da prova).</w:t></w:r></w:p>
 <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Artigo 5.º</w:t></w:r>
-<w:r><w:t> Os factos configuram indícios de irregularidade comercial agravada (Art. 103.º e 104.º Normas de Conformidade Fiscal) e fundamento de responsabilidade civil extracontratual (Art. 483.º CC).</w:t></w:r></w:p>
+<w:r><w:t> Os factos configuram indícios de irregularidade comercial agravada (Art. 103.º e 104.º RGIT) e fundamento de responsabilidade civil extracontratual (Art. 483.º CC).</w:t></w:r></w:p>
 <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Artigo 6.º — PROVA DIGITAL (Art. 125.º CPP · ISO/IEC 27037:2012)</w:t></w:r></w:p>
 <w:p><w:r><w:rPr><w:i/><w:color w:val="CC0000"/></w:rPr><w:t>Master Hash SHA-256: ${masterHash}</w:t></w:r></w:p>
 <w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Artigo 7.º — QUESTÕES PARA O CONTRADITÓRIO (Art. 327.º CPP)</w:t></w:r></w:p>

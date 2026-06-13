@@ -2726,7 +2726,7 @@ const translations = {
         pdfTitle: "PARECER TÉCNICO-JURÍDICA DE INVESTIGAÇÃO DIGITAL",
         pdfSection1: "1. IDENTIFICAÇÃO E METADADOS",
         pdfSection2: "2. ANÁLISE FINANCEIRA CRUZADA",
-        pdfSection3: "3. VEREDICTO DE RISCO (Normas de Conformidade Fiscal)",
+        pdfSection3: "3. VEREDICTO DE RISCO (Art. 103.º e 104.º RGIT)",
         pdfSection4: "4. PROVA RAINHA (SMOKING GUN)",
         pdfSection5: "5. ENQUADRAMENTO LEGAL",
         pdfSection6: "6. METODOLOGIA TÉCNICO-JURÍDICA",
@@ -2738,7 +2738,7 @@ const translations = {
         pdfSection12: "12. QUESTIONÁRIO TÉCNICO-JURÍDICA ESTRATÉGICO",
         pdfSection13: "13. CONCLUSÃO",
         pdfLegalTitle: "FUNDAMENTAÇÃO LEGAL",
-        "pdfLegalNormas de Conformidade Fiscal": "Art. 103 and 104 Normas de Conformidade Fiscal - Tax Fraud and Qualified Fraud",
+        "pdfLegalRGIT": "Art. 103.º e 104.º do RGIT — Fraude Fiscal e Fraude Fiscal Qualificada",
         pdfLegalLGT: "Art. 35.º e 63.º LGT - Juros de mora e deveres de cooperação",
         pdfLegalISO: "ISO/IEC 27037 - Preservação de Prova Digital",
         pdfLegalDL28: "Decreto-Lei n.º 28/2019 - Integridade do processamento de dados e validade de documentos eletrónicos",
@@ -2857,7 +2857,7 @@ const translations = {
         pdfTitle: "DIGITAL FORENSIC EXPERT REPORT",
         pdfSection1: "1. IDENTIFICATION & METADATA",
         pdfSection2: "2. CROSS-FINANCIAL ANALYSIS",
-        pdfSection3: "3. RISK VERDICT (Normas de Conformidade Fiscal)",
+        pdfSection3: "3. RISK VERDICT (RGIT Art. 103 & 104)",
         pdfSection4: "4. SMOKING GUN",
         pdfSection5: "5. LEGAL FRAMEWORK",
         pdfSection6: "6. FORENSIC METHODOLOGY",
@@ -2869,7 +2869,7 @@ const translations = {
         pdfSection12: "12. STRATEGIC QUESTIONNAIRE",
         pdfSection13: "13. CONCLUSION",
         pdfLegalTitle: "LEGAL BASIS",
-       "pdfLegalNormas de Conformidade Fiscal": "Art. 103 and 104 Normas de Conformidade Fiscal - Tax Fraud and Qualified Fraud",
+       "pdfLegalRGIT": "RGIT Art. 103 & 104 — Tax Fraud and Qualified Tax Fraud",
         pdfLegalLGT: "Art. 35 and 63 LGT - Default interest and cooperation duties",
         pdfLegalISO: "ISO/IEC 27037 - Digital Evidence Preservation",
         pdfLegalDL28: "Decree-Law No. 28/2019 - Data processing integrity and validity of electronic documents",
@@ -5442,7 +5442,22 @@ function activateDemoMode() {
         if (_disc) { _disc.style.display = 'inline-block'; }
     })();
 
-    window.activeForensicSession = { sessionId: 'UNIFED-MMLADX8Q-CV69L', masterHash: '5150e7674b891d5d07ca990e4c7124fc66af40488452759aeebdf84976eaa8f6' };
+    // FIX-5: Gerar novo sessionId em cada activação de DEMO — elimina inconsistências entre sessões
+    const _demoSessionId = (typeof window.getForensicSessionId === 'function')
+        ? window.getForensicSessionId()  // usa singleton persistente desta sessão
+        : generateSessionId();            // fallback: gerar novo
+    // Limpar sessionStorage de sessões anteriores para garantir coerência
+    try {
+        const _prevSession = sessionStorage.getItem('currentSession');
+        if (_prevSession) {
+            const _prev = JSON.parse(_prevSession);
+            if (_prev && _prev.sessionId && _prev.sessionId !== _demoSessionId) {
+                sessionStorage.removeItem('currentSession');
+                console.log('[FIX-5] Sessão anterior limpa: ' + _prev.sessionId + ' → ' + _demoSessionId);
+            }
+        }
+    } catch(_e) {}
+    window.activeForensicSession = { sessionId: _demoSessionId, masterHash: null }; // hash preenchido após seal()
     try { sessionStorage.setItem('currentSession', JSON.stringify(window.activeForensicSession)); } catch(_e) {}
 
     if (typeof window._activatePurePanel === 'function') {
@@ -5626,6 +5641,14 @@ function activateDemoMode() {
                         // FASE 3.1 — FIX-FROZEN: UNIFED_ACTIVE_EXPORT_PAYLOAD é frozen.
                         // Não escrever directamente. O hash está em UNIFEDSystem.masterHash
                         // (setter acima) — o próximo getVerifiedPayload() lê este valor.
+                        // FIX-4: Sincronizar activeForensicSession com o hash definitivo pós-seal
+                        // Garante que Dashboard e PDFs exportados referenciam o MESMO hash
+                        if (window.activeForensicSession) {
+                            window.activeForensicSession.masterHash = _sealedHash;
+                            window.activeForensicSession.sessionId  = window.UNIFEDSystem.sessionId || _demoSessionId;
+                            try { sessionStorage.setItem('currentSession', JSON.stringify(window.activeForensicSession)); } catch(_eSS) {}
+                            console.log('[FIX-4] ✅ activeForensicSession sincronizado: sessionId=' + window.activeForensicSession.sessionId + ' | hash=' + _sealedHash.substring(0,16) + '...');
+                        }
                         // Forçar regeneração do QR Code com o hash definitivo
                         if (typeof generateQRCode === 'function') {
                             generateQRCode();
@@ -6694,7 +6717,7 @@ function updateDashboard() {
 
     const quantumNoteEl = document.getElementById('quantumNote');
     if (quantumNoteEl) {
-        quantumNoteEl.textContent = `${t.quantumNoteIVA23} ${formatCurrency(cross.ivaFalta)} | ${t.quantumNoteIVA6} ${formatCurrency(cross.ivaFalta6)} ⚠️ Alt. | SAF-T/DAC7: ${formatCurrency(cross.discrepanciaSaftVsDac7)}`;
+        quantumNoteEl.textContent = `${t.quantumNoteIVA23} ${formatCurrency(cross.ivaFalta)} | ${t.quantumNoteIVA6} ${formatCurrency(cross.ivaFalta6)} | SAF-T/DAC7: ${formatCurrency(cross.discrepanciaSaftVsDac7)}`;
     }
 
     const quantumBreakdownEl = document.getElementById('quantumBreakdown');
@@ -6959,7 +6982,7 @@ function showAlerts() {
             <div style="margin-bottom: 1rem;">
                 <strong style="color: var(--accent-primary);">${sectionIV}:</strong><br>
                 <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Cenário A — IVA 23% (BTOR-BTF × 23%):' : 'Scenario A — VAT 23% (BTOR-BTF × 23%):'} ${formatCurrency(cross.ivaFalta)}</span><br>
-                <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Cenário B — IVA 6% (Ganhos-SAF-T × 6%) ⚠️ Alt.:' : 'Scenario B — VAT 6% (Earnings-SAF-T × 6%) ⚠️ Alt.:'} ${formatCurrency(cross.ivaFalta6)}</span><br>
+                <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Cenário B — IVA 6% (Transporte): ' : 'Scenario B — VAT 6% (Transport): '} ${formatCurrency(cross.ivaFalta6)}</span><br>
                 <span style="color: var(--text-secondary);">${currentLang === 'pt' ? 'Discrepância SAF-T vs DAC7 (base tributável em análise):' : 'SAF-T vs DAC7 discrepancy (taxable base under analysis):'} ${formatCurrency(cross.discrepanciaSaftVsDac7)}</span>
             </div>
             <div style="margin-bottom: 1rem;">
@@ -8286,8 +8309,8 @@ window.translateDataLangElements = translateDataLangElements;
     console.info(
         '[UNIFED-PURE] ✅ Módulo v1.0-COMMERCIAL-LITIGATION registado no UNIFEDSystem.\n' +
         '  Activação : UNIFEDSystem.loadAnonymizedRealCase()\n' +
-        '  Fonte     : UNIFED-MMLADX8Q-CV69L · demoMode: false\n' +
-        '  Hash ref. : 5150e767... (SHA-256 verificado)'
+        '  Fonte     : sessionId gerado dinamicamente em activateDemoMode() · demoMode: false\n' +
+        '  Hash ref. : gerado em runtime (SHA-256 determinístico por sessionSalt)'
     );
 })();
 
@@ -8812,7 +8835,7 @@ function getSystemMetadata() {
             'eIDAS (EU) 910/2014',
             'RFC 3161',
             'GDPR (EU) 2016/679',
-            'Normas de Conformidade Fiscal (Portugal)',
+            'RGIT — Regime Geral das Infracções Tributárias (Portugal)',
             'CIVA (Portugal)',
             'DL 28/2019'
         ],
@@ -9291,20 +9314,20 @@ window._syncPureDashboard = (function() {
             }
             // ── FIM RECTIFICAÇÃO R24-WC-INDICATORS ───────────────────────────────────
 
-            // ── RECTIFICAÇÃO R24-MACRO ────────────────────────────────────────────────
-            // Actualizar simulação macroeconómica com valores calculados a partir de
-            // cross.discrepanciaCritica e system.dataMonths.size (media mensal real).
-            // Os spans têm IDs dedicados (pure-macro-*) adicionados ao panel HTML.
+            // ── RECTIFICAÇÃO R24-MACRO (FIX-2 v2) ───────────────────────────────────
+            // Prioridade: ler cross.impacto* populados por calculaCrossings() (fonte única).
+            // Fallback: recalcular localmente se cross.impactoMensalMercado === 0 (pipeline
+            // ainda não executou calculaCrossings antes do primeiro sync).
             const macroMeses = (system.dataMonths && system.dataMonths.size > 0)
                 ? system.dataMonths.size : 1;
-            const macroMedia    = (cross.discrepanciaCritica || 0) / macroMeses;
-            // ── PATCH D2 — patch_unifed_macro_v13 (remover factor 0.85 da UI) ──
-            // ANTERIOR (CORROMPIDO): factor 0.85 produzia 1.449.248.997 € no painel.
-            // CORRIGIDO: cálculo directo alinhado com Patch C e Patch D1.
-            // Checksum: 534,1475 × 38000 × 12 × 7 = 1.704.998.820,00 €
-            const macroMensal   = macroMedia * 38000;
-            const macroAnual    = macroMensal * 12;
-            const macro7Anos    = macroAnual * 7;
+            const _crossMensal = cross.impactoMensalMercado || 0;
+            const _crossAnual  = cross.impactoAnualMercado  || 0;
+            const _cross7Anos  = cross.impactoSeteAnosMercado || 0;
+            // Se cross já está populado, usar directamente (garante coerência Dashboard=PDF)
+            const macroMensal = _crossMensal > 0 ? _crossMensal : ((cross.discrepanciaCritica || 0) / macroMeses) * 38000;
+            const macroAnual  = _crossAnual  > 0 ? _crossAnual  : macroMensal * 12;
+            const macro7Anos  = _cross7Anos  > 0 ? _cross7Anos  : macroAnual * 7;
+            const macroMedia  = (cross.impactoMensalMercado || 0) / 38000; // média por viatura activa
             const fmtMacro = window.formatForensicCurrency || fmt;
             const macroMediaEl  = document.getElementById('pure-macro-media');
             const macroMensalEl = document.getElementById('pure-macro-mensal');
@@ -9465,6 +9488,12 @@ window._syncPureDashboard = (function() {
                 // O setter WATCH-4 é configurable:true — não frozen
                 if (window.UNIFEDSystem && window.UNIFEDSystem.masterHash !== masterHash) {
                     window.UNIFEDSystem.masterHash = masterHash;
+                }
+                // FIX-4 (sync point 2): garantir que activeForensicSession também tem o hash definitivo
+                if (window.activeForensicSession) {
+                    window.activeForensicSession.masterHash = masterHash;
+                    window.activeForensicSession.sessionId  = (window.UNIFEDSystem && window.UNIFEDSystem.sessionId) || window.activeForensicSession.sessionId;
+                    try { sessionStorage.setItem('currentSession', JSON.stringify(window.activeForensicSession)); } catch(_eSS2) {}
                 }
             }
             if(typeof window.generateQRCode === 'function') window.generateQRCode();
