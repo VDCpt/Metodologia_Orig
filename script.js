@@ -5921,7 +5921,14 @@ async function performAudit() {
                     if (_overlay && _overlay.id !== 'loadingOverlay') _overlay.style.display = 'flex';
 
                     await window.UNIFED_AnalysisCognitive.triggerAnalysisComplete(window.UNIFEDSystem.analysis.btor);
-                    console.log('[FALHA7-R24] ✅ TOP 3 gerado automaticamente.');
+
+                    // ── FASE 3.1 — CIRURGIA 1: Disparo de UNIFED_TOP3_READY ──────────────
+                    // Garante que unifed_contraperiria_export.js liberta o botão de
+                    // exportação apenas APÓS a conclusão da análise cognitiva e da geração
+                    // do Merkle Root (populado dentro de triggerAnalysisComplete).
+                    // Este evento é o único gate de autorização do guard _merkleRootReady.
+                    document.dispatchEvent(new CustomEvent('UNIFED_TOP3_READY'));
+                    console.log('[FALHA7-R24] ✅ TOP 3 gerado automaticamente e evento UNIFED_TOP3_READY disparado.');
 
                     // Remover overlay após conclusão
                     const _ov2 = document.getElementById('_top3ProcessingOverlay');
@@ -6308,15 +6315,36 @@ function performForensicCrossings() {
     cross.btor = despesas;
     cross.btf  = faturaPlataforma;
 
-    // ── PATCH D1 — patch_unifed_macro_v13 (base única mediaMensalOmissao) ────
-    // ANTERIOR (CORROMPIDO): factor 0.85 via calcularDanoConservador() produzia
-    // impactoSeteAnosMercado = 1.449.248.997 € (sub-estimação de 15%).
-    // CORRIGIDO: cálculo directo sem factor conservador, alinhado com Patch C
-    // (unifed_triada_export.js). Base única: discrepanciaMensalMedia.
-    // Checksum: 534,1475 × 38000 × 12 × 7 = 1.704.998.820,00 €
-    cross.impactoMensalMercado   = discrepanciaMensalMedia * 38000;
-    cross.impactoAnualMercado    = cross.impactoMensalMercado * 12;
-    cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
+    // ── FASE 3.1 — CIRURGIA 2: Z-Score IC 99% sobre vector de meses reais ─────
+    // Substitui o cálculo escalar directo (discrepanciaMensalMedia × 38000) pela
+    // chamada ao modelo estatístico calcularDanoConservador() com assinatura Modo B
+    // (vector de discrepâncias mensais reais). Elimina a heurística de multiplicação
+    // directa que não considera a variância real dos dados de origem.
+    // Fallback determinístico: se monthlyData tiver menos de 2 meses, usa o escalar
+    // (Modo A da mesma função) para garantir zero regressão funcional.
+    // Fundamento normativo: Art. 344.º, n.º 2 CC; NIST SP 800-86 §3.
+    // ─────────────────────────────────────────────────────────────────────────
+    const _monthlyData = UNIFEDSystem.monthlyData || {};
+    const seriesMensais = Object.keys(_monthlyData).sort().map(m => {
+        return Math.abs((_monthlyData[m].despesas || 0) - (_monthlyData[m].faturaPlataforma || 0));
+    });
+
+    if (window.UNIFED_QUESTIONNAIRE &&
+        typeof window.UNIFED_QUESTIONNAIRE.calcularDanoConservador === 'function' &&
+        seriesMensais.length >= 2) {
+        // Modo B — vector estatístico com IC 99% (Z = 2.576)
+        const danoAnualIC99 = window.UNIFED_QUESTIONNAIRE.calcularDanoConservador(seriesMensais, 38000);
+        cross.impactoAnualMercado    = danoAnualIC99;
+        cross.impactoMensalMercado   = danoAnualIC99 / 12;
+        cross.impactoSeteAnosMercado = danoAnualIC99 * 7;
+        console.log('[Z-SCORE IC99] Cálculo estatístico activo — Dano Anual Apurado: €' + danoAnualIC99.toFixed(2));
+    } else {
+        // Modo A — fallback escalar determinístico (< 2 meses de dados)
+        cross.impactoMensalMercado   = discrepanciaMensalMedia * 38000;
+        cross.impactoAnualMercado    = cross.impactoMensalMercado * 12;
+        cross.impactoSeteAnosMercado = cross.impactoAnualMercado * 7;
+        console.warn('[Z-SCORE IC99] Fallback escalar activo — monthlyData insuficiente (' + seriesMensais.length + ' meses).');
+    }
     // ─────────────────────────────────────────────────────────────────────────
 
     cross.discrepancia5IMT     = cross.discrepanciaSaftVsDac7 * 0.05;

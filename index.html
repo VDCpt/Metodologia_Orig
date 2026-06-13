@@ -209,7 +209,10 @@ window.UNIFED_CONFIG = Object.freeze({
     versao:               'v1.0-COMMERCIAL-LITIGATION',
     modo:                 'DEMO',
     dataConfig:           new Date().toISOString(),
-    aviso:                'CONFIDENCIAL v1.0 — LITÍGIO COMERCIAL E CONTRATUAL — USO RESTRITO A MANDATO JURÍDICO AUTORIZADO'
+    aviso:                'CONFIDENCIAL v1.0 — LITÍGIO COMERCIAL E CONTRATUAL — USO RESTRITO A MANDATO JURÍDICO AUTORIZADO',
+    // FASE 3.1 — operatorToken para demonstração controlada (bypass activo em modo DEMO)
+    // Nota de produção: substituir por injecção via Cloudflare Worker Secret.
+    operatorToken:        'UNIFED-DEMO-ACCESS'
 });
 delete window._tmp;
 console.log('[UNIFED-CONFIG] ✅ Configuração carregada (autenticação por token dinâmico de sessão).');
