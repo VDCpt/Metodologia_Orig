@@ -644,7 +644,11 @@ function setupTop3EditListeners() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const regenerateBtn = document.getElementById('regenerateTop3Btn');
-    if (regenerateBtn) {
+    // FIX-TOP3-DUPLICATE-ALERT: guard partilhado com o <script> inline de index.html
+    // (que usa o mesmo dataset.hooked). Qualquer um dos dois scripts que execute
+    // primeiro reivindica o botão; o outro não regista listener duplicado.
+    if (regenerateBtn && !regenerateBtn.dataset.hooked) {
+        regenerateBtn.dataset.hooked = 'true';
         regenerateBtn.addEventListener('click', function() {
             console.log('[UI-TOP3] 🔄 Regenerando TOP 3...');
             // [PATCH-UNIFED-02] Validação de integridade do payload BTOR no ponto de disparo.
@@ -672,7 +676,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const acceptBtn = document.getElementById('acceptTop3Btn');
-    if (acceptBtn) {
+    // FIX-TOP3-DUPLICATE-ALERT: guard partilhado com o <script> inline de index.html
+    // (que usa o mesmo dataset.hooked). Elimina o duplo alerta "TOP 3 Confirmado".
+    if (acceptBtn && !acceptBtn.dataset.hooked) {
+        acceptBtn.dataset.hooked = 'true';
         acceptBtn.addEventListener('click', function() {
             console.log('[UI-TOP3] ✅ Advogado Aceitou TOP 3 — Pronto para Exportação');
             if (window.UNIFEDSystem && window.UNIFEDSystem.analysis) {
